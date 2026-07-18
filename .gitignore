@@ -47,9 +47,18 @@ Thumbs.db
 storage/uploads/*
 storage/processed/*
 storage/temp/*
+storage/app_settings.json
 !storage/uploads/.gitkeep
 !storage/processed/.gitkeep
 !storage/temp/.gitkeep
+
+# LaMa checkpoints (downloaded on first run)
+models/lama/**
+!models/lama/.gitkeep
+
+# Phase backups
+*.phase5.bak
+backups/
 
 # Logs & caches
 *.log

@@ -22,6 +22,10 @@ opencv-python-headless==4.11.0.86
 numpy==2.2.5
 Pillow==11.2.1
 
+# AI inpainting (LaMa TorchScript). Install CUDA wheels separately when deploying with GPU.
+torch==2.5.1
+torchvision==0.20.1
+
 # Dev / quality
 httpx==0.28.1
 pytest==8.3.5

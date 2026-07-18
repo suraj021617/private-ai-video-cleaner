@@ -1,63 +1,41 @@
-# Processing engine architecture (Phase 4)
+# Processing engine + LaMa AI (Phase 5)
 
-## Goal
-
-Production-ready mask-scoped video processing with FFmpeg + OpenCV, GPU when
-available, CPU fallback, and a plugin interface for future AI inpainting.
-
-## Pipeline
+## Pipeline (unchanged shell)
 
 ```
-source MP4
-  → FrameReader (OpenCV decode, source fps/resolution)
-  → per-frame mask raster (rect/brush, time-aware)
-  → ProcessingPlugin.process_frame (blur | fill | classic_inpaint)
-  → FrameWriter (temp video)
-  → ffmpeg mux (libx264 + original audio stream copy)
-  → storage/processed/{user_id}/{job_id}.mp4
+Upload → Mask Editor → Mask Saved → Processing Engine → Export
 ```
+
+Only the `ai_inpaint` strategy is new/real. Classic strategies remain.
+
+## LaMa plugin
+
+Path: `backend/app/processing/plugins/lama/`  
+(Symlink: `backend/processing/plugins/lama`)
+
+| File | Role |
+|------|------|
+| `download.py` | Resumable checkpoint download |
+| `model_manager.py` | Load JIT model, CUDA/CPU, OOM → CPU |
+| `utils.py` | Crop/pad, feather, color match, blend |
+| `predict.py` | Crop-only LaMa inference + hard outside copy |
+
+Checkpoint: `models/lama/big-lama.pt` (auto-download on first AI run).
 
 ## Invariants
 
-1. Output fps equals source fps used by the reader.
-2. Output width/height equal source frame size.
-3. Original audio is stream-copied when present (`-c:a copy`).
-4. Plugins must composite so pixels where `mask == 0` are unchanged.
-5. `ai_inpaint` is registered but unavailable (HTTP 501).
+1. Only the padded bbox around the mask is sent to LaMa (default pad 64px).
+2. Soft feather blending + color correction.
+3. Final hard copy: `result[mask==0] = original[mask==0]`.
+4. FPS / resolution / audio preserved via existing FFmpeg muxer.
+5. Export `mp4` or `mov`.
 
-## Device selection
+## Settings API
 
-`detect_compute_device()` chooses:
+- `GET/PUT /api/v1/settings`
+- `GET /api/v1/settings/lama-status`
+- `POST /api/v1/settings/lama-ensure`
 
-1. CUDA (`cv2.cuda`) when devices > 0
-2. OpenCL (`cv2.UMat`) when enabled
-3. CPU otherwise
+## Jobs
 
-Blur uses GPU paths when present; classic inpaint uses CPU OpenCV.
-
-## Plugin API
-
-```python
-class ProcessingPlugin(ABC):
-    name: ProcessingStrategy
-    available: bool
-    def process_frame(self, ctx: FrameContext, options: StrategyOptions) -> ProcessFrameResult: ...
-```
-
-Future AI models implement the same interface and register in
-`app.processing.strategies`.
-
-## Jobs API
-
-- `GET /api/v1/processing/capabilities`
-- `POST /api/v1/videos/{id}/jobs`
-- `GET /api/v1/jobs/{id}`
-- `GET /api/v1/jobs/{id}/progress`
-- `GET /api/v1/jobs/{id}/download`
-
-## Benchmarks
-
-```bash
-cd backend
-pytest -q -m benchmark -s
-```
+`strategy: "ai_inpaint"` is accepted. Progress includes `fps`, `eta_seconds`, `model_loaded`.

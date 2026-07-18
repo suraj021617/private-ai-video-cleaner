@@ -28,6 +28,13 @@ def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _options_dict(job: ProcessingJob) -> dict:
+    try:
+        return json.loads(job.options_json or "{}")
+    except json.JSONDecodeError:
+        return {}
+
+
 class JobService:
     def __init__(self, db: AsyncSession, settings: Settings) -> None:
         self.db = db
@@ -35,6 +42,7 @@ class JobService:
         self.storage = StorageService(settings)
 
     def to_out(self, job: ProcessingJob) -> JobOut:
+        options = _options_dict(job)
         return JobOut(
             id=job.id,
             video_id=job.video_id,
@@ -49,12 +57,15 @@ class JobService:
             message=job.message,
             error_message=job.error_message,
             download_ready=job.status == "completed" and bool(job.output_path),
+            export_format=str(options.get("export_format", "mp4")),
             created_at=job.created_at,
             updated_at=job.updated_at,
             completed_at=job.completed_at,
         )
 
     def to_progress(self, job: ProcessingJob) -> JobProgressOut:
+        options = _options_dict(job)
+        metrics = options.get("_progress") or {}
         return JobProgressOut(
             id=job.id,
             status=job.status,
@@ -64,6 +75,9 @@ class JobService:
             message=job.message,
             device_used=job.device_used,
             error=job.error_message,
+            fps=metrics.get("fps"),
+            eta_seconds=metrics.get("eta_seconds"),
+            model_loaded=metrics.get("model_loaded"),
         )
 
     async def resolve_mask_payload(
@@ -85,7 +99,6 @@ class JobService:
                     status_code=404,
                 )
 
-        # Prefer inlined payload (current editor state); fall back to saved mask.
         if request.payload is not None:
             payload = request.payload.model_dump()
         elif mask_id:
@@ -120,6 +133,11 @@ class JobService:
             "fill_color_bgr": list(request.fill_color_bgr),
             "inpaint_radius": request.inpaint_radius,
             "inpaint_method": request.inpaint_method,
+            "export_format": request.export_format,
+            "padding": request.padding,
+            "blend_strength": request.blend_strength,
+            "feather_radius": request.feather_radius,
+            "prefer_gpu": request.prefer_gpu,
         }
         job = ProcessingJob(
             owner_id=owner_id,
@@ -166,7 +184,9 @@ class JobService:
 async def run_job_worker(job_id: str, settings: Settings) -> None:
     """Execute a job in a background task with its own DB session."""
     from app.db.session import get_session_factory
+    from app.services.runtime_settings import apply_runtime_overrides
 
+    settings = apply_runtime_overrides(settings)
     factory = get_session_factory()
     async with factory() as db:
         job = await db.scalar(
@@ -184,8 +204,12 @@ async def run_job_worker(job_id: str, settings: Settings) -> None:
         storage = StorageService(settings)
         source = Path(video.storage_path)
         work_dir = settings.temp_dir / "jobs" / job.id
+        options_data = json.loads(job.options_json or "{}")
+        export_format = str(options_data.get("export_format", "mp4"))
+        if export_format not in {"mp4", "mov"}:
+            export_format = "mp4"
         output_path = (
-            storage.processed_dir / job.owner_id / f"{job.id}.mp4"
+            storage.processed_dir / job.owner_id / f"{job.id}.{export_format}"
         )
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -193,17 +217,36 @@ async def run_job_worker(job_id: str, settings: Settings) -> None:
         job.message = "Starting pipeline"
         await db.commit()
 
-        options_data = json.loads(job.options_json or "{}")
+        if settings.lama_cpu_threads and settings.lama_cpu_threads > 0:
+            try:
+                import torch
+
+                torch.set_num_threads(int(settings.lama_cpu_threads))
+            except Exception:  # noqa: BLE001
+                pass
+
         options = StrategyOptions(
             blur_ksize=int(options_data.get("blur_ksize", 31)),
             fill_color_bgr=tuple(options_data.get("fill_color_bgr", [0, 0, 0])),  # type: ignore[arg-type]
             inpaint_radius=int(options_data.get("inpaint_radius", 3)),
             inpaint_method=str(options_data.get("inpaint_method", "telea")),
+            extras={
+                "model_dir": str(settings.lama_model_dir),
+                "prefer_gpu": bool(job.prefer_gpu),
+                "padding": int(options_data.get("padding", settings.lama_padding)),
+                "blend_strength": float(
+                    options_data.get("blend_strength", settings.lama_blend_strength)
+                ),
+                "feather_radius": int(
+                    options_data.get("feather_radius", settings.lama_feather_radius)
+                ),
+            },
         )
         payload = json.loads(job.mask_payload_json)
         pipeline = VideoProcessingPipeline(
             prefer_gpu=bool(job.prefer_gpu),
             strategy_options=options,
+            export_format=export_format,
         )
 
         loop = asyncio.get_running_loop()
@@ -213,24 +256,37 @@ async def run_job_worker(job_id: str, settings: Settings) -> None:
             nonlocal last_commit
 
             async def _update() -> None:
-                nonlocal last_commit
                 async with factory() as progress_db:
                     row = await progress_db.scalar(
                         select(ProcessingJob).where(ProcessingJob.id == job_id)
                     )
                     if row is None:
                         return
-                    row.status = progress.status if progress.status != "encoding" else "running"
+                    row.status = (
+                        progress.status
+                        if progress.status != "encoding"
+                        else "running"
+                    )
                     row.frames_total = progress.frames_total
                     row.frames_done = progress.frames_done
                     row.percent = progress.percent
                     row.message = progress.message
                     row.device_used = progress.device
+                    opts = _options_dict(row)
+                    opts["_progress"] = {
+                        "fps": progress.fps,
+                        "eta_seconds": progress.eta_seconds,
+                        "model_loaded": progress.model_loaded,
+                    }
+                    row.options_json = json.dumps(opts)
                     await progress_db.commit()
 
-            # Throttle DB writes from the worker thread via the event loop.
             now = loop.time()
-            if progress.percent >= 100 or progress.status in {"encoding", "completed"} or now - last_commit >= 0.4:
+            if (
+                progress.percent >= 100
+                or progress.status in {"encoding", "completed"}
+                or now - last_commit >= 0.4
+            ):
                 last_commit = now
                 asyncio.run_coroutine_threadsafe(_update(), loop)
 

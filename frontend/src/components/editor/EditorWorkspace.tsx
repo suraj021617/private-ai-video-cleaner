@@ -94,6 +94,12 @@ export function EditorWorkspace({ video }: Props) {
             >
               Upload
             </Link>
+            <Link
+              href="/settings"
+              className="inline-flex h-10 items-center rounded-xl border border-border px-3 text-sm"
+            >
+              Settings
+            </Link>
           </div>
         </div>
       </header>

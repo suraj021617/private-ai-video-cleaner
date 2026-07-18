@@ -37,7 +37,7 @@ def create_app() -> FastAPI:
         version=__version__,
         description=(
             "Private API for editing videos you have permission to edit. "
-            "Phase 4: FFmpeg/OpenCV processing engine with mask-scoped strategies."
+            "Phase 5: LaMa AI inpainting with mask-scoped FFmpeg/OpenCV pipeline."
         ),
         lifespan=lifespan,
         docs_url="/docs",
@@ -62,7 +62,7 @@ def create_app() -> FastAPI:
             "version": __version__,
             "docs": "/docs",
             "health": f"{settings.api_v1_prefix}/health",
-            "phase": "4-processing-engine",
+            "phase": "5-lama-inpainting",
         }
 
     return application

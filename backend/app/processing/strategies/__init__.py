@@ -30,10 +30,7 @@ def get_plugin(strategy: ProcessingStrategy | str) -> ProcessingPlugin:
             code="unsupported_strategy",
             message=f"Unknown processing strategy: {strategy}",
             status_code=400,
-            details={
-                "allowed": [s.value for s in ProcessingStrategy if s != ProcessingStrategy.AI_INPAINT]
-                + [ProcessingStrategy.AI_INPAINT.value + " (unavailable)"]
-            },
+            details={"allowed": [s.value for s in ProcessingStrategy]},
         ) from exc
 
     plugin = _REGISTRY.get(key)
@@ -43,9 +40,6 @@ def get_plugin(strategy: ProcessingStrategy | str) -> ProcessingPlugin:
             message=f"No plugin registered for {key}",
             status_code=400,
         )
-    if not plugin.available:
-        # Still return plugin so callers can surface a clear error on process
-        pass
     return plugin
 
 

@@ -234,7 +234,19 @@ Payload (normalized coordinates 0–1):
 }
 ```
 
-Strategies: `blur`, `fill`, `classic_inpaint`. `ai_inpaint` is not accepted until implemented.
+Strategies: `blur`, `fill`, `classic_inpaint`, `ai_inpaint` (LaMa).
+
+Additional job fields: `export_format` (`mp4`|`mov`), `padding`, `blend_strength`, `feather_radius`.
+
+Progress extras: `fps`, `eta_seconds`, `model_loaded`.
+
+### Settings
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET/PUT | `/settings` | LaMa/processing preferences |
+| GET | `/settings/lama-status` | Model load/download status |
+| POST | `/settings/lama-ensure` | Download/load checkpoint |
 
 ---
 

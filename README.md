@@ -15,9 +15,9 @@ Private, owner-only web application for editing videos you have permission to ed
 
 ## Current phase
 
-**Phase 4 — Processing engine**
+**Phase 5 — Real AI inpainting (LaMa)**
 
-FFmpeg + OpenCV mask-scoped pipeline (blur / fill / classic inpaint), GPU when available, CPU fallback, jobs API + MP4 export. AI removal is not enabled yet.
+Mask-scoped LaMa object removal with GPU/CPU fallback, resumable model download, settings page, and MP4/MOV export. Classic blur/fill/inpaint strategies remain available.
 
 See [docs/PROCESSING_ENGINE.md](docs/PROCESSING_ENGINE.md), [docs/DEVELOPMENT_PHASES.md](docs/DEVELOPMENT_PHASES.md), and [docs/API_CONTRACT.md](docs/API_CONTRACT.md).
 

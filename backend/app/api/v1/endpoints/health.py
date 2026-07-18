@@ -20,7 +20,7 @@ def health() -> HealthResponse:
         status="ok",
         service=settings.app_name,
         version=__version__,
-        phase="4-processing-engine",
+        phase="5-lama-inpainting",
     )
 
 

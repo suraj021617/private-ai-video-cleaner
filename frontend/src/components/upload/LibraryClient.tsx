@@ -84,6 +84,12 @@ export function LibraryClient() {
           >
             Upload
           </Link>
+          <Link
+            href="/settings"
+            className="inline-flex h-11 items-center rounded-lg border border-border px-5 text-sm"
+          >
+            Settings
+          </Link>
           <button
             type="button"
             onClick={async () => {

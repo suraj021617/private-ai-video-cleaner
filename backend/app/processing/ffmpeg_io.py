@@ -149,6 +149,7 @@ class FrameWriter:
         source_path: Path,
         info: VideoStreamInfo,
         temp_dir: Path,
+        container: str = "mp4",
     ) -> None:
         if not ffmpeg_available():
             raise AppError(
@@ -160,6 +161,7 @@ class FrameWriter:
         self.source_path = source_path
         self.info = info
         self.temp_dir = temp_dir
+        self.container = container if container in {"mp4", "mov"} else "mp4"
         self.temp_dir.mkdir(parents=True, exist_ok=True)
         self._video_only = self.temp_dir / "video_only.mp4"
 
@@ -195,6 +197,8 @@ class FrameWriter:
         self._writer.release()
         self.output_path.parent.mkdir(parents=True, exist_ok=True)
 
+        # Preserve source fps via -r, stream-copy audio, H.264 for compatibility.
+        movflags = ["-movflags", "+faststart"] if self.container == "mp4" else []
         if self.info.has_audio:
             command = [
                 "ffmpeg",
@@ -211,11 +215,16 @@ class FrameWriter:
                 "libx264",
                 "-pix_fmt",
                 "yuv420p",
+                "-r",
+                str(self.info.fps),
                 "-c:a",
                 "copy",
                 "-shortest",
-                "-movflags",
-                "+faststart",
+                "-f",
+                self.container,
+                *movflags,
+                "-map_metadata",
+                "1",
                 str(self.output_path),
             ]
         else:
@@ -228,9 +237,12 @@ class FrameWriter:
                 "libx264",
                 "-pix_fmt",
                 "yuv420p",
+                "-r",
+                str(self.info.fps),
                 "-an",
-                "-movflags",
-                "+faststart",
+                "-f",
+                self.container,
+                *movflags,
                 str(self.output_path),
             ]
 

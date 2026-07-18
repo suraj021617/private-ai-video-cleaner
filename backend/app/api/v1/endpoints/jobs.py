@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks, Depends
@@ -13,6 +14,7 @@ from app.core.config import Settings, get_settings
 from app.core.errors import AppError
 from app.db.session import get_db
 from app.processing.device import device_capabilities
+from app.processing.plugins.lama import get_model_manager
 from app.processing.strategies import list_strategies
 from app.schemas.job import (
     DeviceInfoResponse,
@@ -22,6 +24,7 @@ from app.schemas.job import (
     StrategyInfo,
 )
 from app.services.jobs import JobService, run_job_worker
+from app.services.runtime_settings import apply_runtime_overrides
 from app.services.video import VideoService
 
 router = APIRouter(tags=["jobs"])
@@ -44,13 +47,19 @@ def get_job_service(
 @router.get("/processing/capabilities", response_model=DeviceInfoResponse)
 async def processing_capabilities(
     auth: AuthContext = Depends(require_auth),
+    settings: Settings = Depends(get_settings),
 ) -> DeviceInfoResponse:
     caps = device_capabilities()
+    effective = apply_runtime_overrides(settings)
+    manager = get_model_manager(
+        effective.lama_model_dir, prefer_gpu=effective.lama_prefer_gpu
+    )
     return DeviceInfoResponse(
         cuda_devices=int(caps["cuda_devices"]),
         opencl_available=bool(caps["opencl_available"]),
         selected=str(caps["selected"]),
         strategies=[StrategyInfo(**item) for item in list_strategies()],
+        lama=manager.status,
     )
 
 
@@ -125,8 +134,14 @@ async def download_job_output(
             message="Processed file is missing from storage",
             status_code=404,
         )
+    try:
+        options = json.loads(job.options_json or "{}")
+    except json.JSONDecodeError:
+        options = {}
+    fmt = str(options.get("export_format", path.suffix.lstrip(".") or "mp4"))
+    media = "video/quicktime" if fmt == "mov" else "video/mp4"
     return FileResponse(
         path,
-        media_type="video/mp4",
-        filename=f"processed-{job.id}.mp4",
+        media_type=media,
+        filename=f"processed-{job.id}.{fmt}",
     )

@@ -48,6 +48,18 @@ class Settings(BaseSettings):
         "video/mp4,video/quicktime,video/webm,video/x-matroska,application/octet-stream"
     )
 
+    # LaMa / AI processing settings
+    lama_model_dir: Path = Path("../models/lama")
+    lama_model_url: str = (
+        "https://github.com/enesmsahin/simple-lama-inpainting/releases/download/v0.1.0/big-lama.pt"
+    )
+    lama_prefer_gpu: bool = True
+    lama_padding: int = 64
+    lama_blend_strength: float = 1.0
+    lama_feather_radius: int = 12
+    lama_cpu_threads: int = 0  # 0 = torch default
+    processing_temp_dir: Path | None = None
+
     @field_validator("cookie_samesite")
     @classmethod
     def validate_samesite(cls, value: str) -> str:
@@ -70,6 +82,8 @@ class Settings(BaseSettings):
 
     @property
     def temp_dir(self) -> Path:
+        if self.processing_temp_dir is not None:
+            return Path(self.processing_temp_dir)
         return self.storage_root / "temp"
 
     @property

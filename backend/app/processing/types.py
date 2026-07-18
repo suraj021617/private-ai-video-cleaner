@@ -80,3 +80,6 @@ class PipelineProgress:
     percent: float
     message: str | None = None
     device: str | None = None
+    fps: float | None = None
+    eta_seconds: float | None = None
+    model_loaded: bool | None = None
