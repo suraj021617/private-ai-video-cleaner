@@ -355,7 +355,35 @@ export function ProcessPanel({ videoId, payload, activeMaskId }: Props) {
             </a>
           ) : null}
           {progress.error ? (
-            <p className="mt-2 text-sm text-danger">{progress.error}</p>
+            <div className="mt-3 space-y-2 rounded-xl border border-rose-500/30 bg-rose-500/5 p-3">
+              <p className="text-sm text-danger">{progress.error}</p>
+              {progress.error_reason ? (
+                <p className="text-xs text-muted">
+                  Reason: {progress.error_reason}
+                </p>
+              ) : null}
+              {progress.suggested_fix ? (
+                <p className="text-xs text-amber-200">
+                  Fix: {progress.suggested_fix}
+                </p>
+              ) : null}
+              <button
+                type="button"
+                className="h-9 rounded-lg border border-border px-3 text-xs"
+                onClick={() => {
+                  const text = [
+                    progress.error,
+                    progress.error_reason,
+                    progress.suggested_fix,
+                  ]
+                    .filter(Boolean)
+                    .join("\n");
+                  void navigator.clipboard.writeText(text);
+                }}
+              >
+                Copy Error
+              </button>
+            </div>
           ) : null}
         </div>
       ) : null}

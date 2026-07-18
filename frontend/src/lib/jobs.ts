@@ -53,6 +53,8 @@ export type JobProgress = {
   strategy_used?: string | null;
   fallback_from?: string | null;
   queue_position?: number | null;
+  error_reason?: string | null;
+  suggested_fix?: string | null;
 };
 
 export async function createProcessingJob(

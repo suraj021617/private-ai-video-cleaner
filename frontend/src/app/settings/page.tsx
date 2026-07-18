@@ -121,12 +121,20 @@ export default function SettingsPage() {
             Settings
           </h1>
         </div>
-        <Link
-          href="/library"
-          className="h-10 rounded-xl border border-border px-3 text-sm leading-10"
-        >
-          Library
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/diagnostics"
+            className="h-10 rounded-xl border border-border px-3 text-sm leading-10"
+          >
+            Diagnostics
+          </Link>
+          <Link
+            href="/library"
+            className="h-10 rounded-xl border border-border px-3 text-sm leading-10"
+          >
+            Library
+          </Link>
+        </div>
       </header>
 
       <form onSubmit={onSave} className="space-y-4 rounded-2xl border border-border bg-surface/80 p-5">

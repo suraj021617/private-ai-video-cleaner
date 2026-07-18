@@ -85,6 +85,12 @@ export function LibraryClient() {
             Upload
           </Link>
           <Link
+            href="/diagnostics"
+            className="inline-flex h-11 items-center rounded-lg border border-border px-5 text-sm"
+          >
+            Diagnostics
+          </Link>
+          <Link
             href="/settings"
             className="inline-flex h-11 items-center rounded-lg border border-border px-5 text-sm"
           >

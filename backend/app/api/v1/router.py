@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
     auth,
+    diagnostics,
     health,
     jobs,
     masks,
@@ -24,3 +25,4 @@ api_router.include_router(jobs.router)
 api_router.include_router(settings.router)
 api_router.include_router(smart_edit.router)
 api_router.include_router(projects.router)
+api_router.include_router(diagnostics.router)

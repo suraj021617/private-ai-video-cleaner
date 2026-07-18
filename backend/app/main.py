@@ -51,8 +51,7 @@ def create_app() -> FastAPI:
         version=__version__,
         description=(
             "Private API for editing videos you have permission to edit. "
-            "Phase 6/7: smart editing, advanced AI plugins, export presets, "
-            "job queue controls, and project persistence."
+            "Phase 8: production diagnostics & stability on top of Phase 6/7."
         ),
         lifespan=lifespan,
         docs_url="/docs",
@@ -77,7 +76,7 @@ def create_app() -> FastAPI:
             "version": __version__,
             "docs": "/docs",
             "health": f"{settings.api_v1_prefix}/health",
-            "phase": "6-7-production",
+            "phase": "8-diagnostics",
         }
 
     return application

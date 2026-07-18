@@ -15,6 +15,10 @@ Private, owner-only desktop/web application for editing videos you have permissi
 
 ## Current phase
 
+**Phase 8 — Production diagnostics & stability** (on top of Phase 6–7)
+
+Open `/diagnostics` to verify FFmpeg, GPU, models, run benchmarks, video/export tests, download health reports, and browse logs before processing.
+
 **Phase 6–7 — Smart editing + advanced AI + production hardening**
 
 - Automatic object detection, tracking, keyframes, multi-mask polish (feather / expand / refine)

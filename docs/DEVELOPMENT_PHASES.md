@@ -9,6 +9,7 @@
 | 5 LaMa AI | Done | Real LaMa crop inpaint, settings, GPU/CPU |
 | 6 Smart editing | Done | Detect, track, keyframes, multi-mask polish, thumbs, B/A, undo persistence |
 | 7 Advanced AI + production | Done | ProPainter/STTN slots + fallback, export presets, job controls, projects, installer, docs |
+| 8 Diagnostics & stability | Done | System/model checks, GPU benchmark, video/export tests, health report, log viewer, error help |
 
 ## Phase 6–7 acceptance
 

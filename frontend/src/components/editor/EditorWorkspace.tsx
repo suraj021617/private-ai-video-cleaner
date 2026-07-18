@@ -180,6 +180,12 @@ export function EditorWorkspace({ video }: Props) {
               Library
             </Link>
             <Link
+              href="/diagnostics"
+              className="inline-flex h-10 items-center rounded-xl border border-border px-3 text-sm"
+            >
+              Diagnostics
+            </Link>
+            <Link
               href="/settings"
               className="inline-flex h-10 items-center rounded-xl border border-border px-3 text-sm"
             >

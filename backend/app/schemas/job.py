@@ -60,6 +60,9 @@ class JobProgressOut(BaseModel):
     strategy_used: str | None = None
     fallback_from: str | None = None
     queue_position: int | None = None
+    # Phase 8 additive error guidance (optional; older clients ignore)
+    error_reason: str | None = None
+    suggested_fix: str | None = None
 
 
 class JobOut(BaseModel):

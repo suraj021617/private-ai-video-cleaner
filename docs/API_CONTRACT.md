@@ -295,3 +295,11 @@ Progress extras: `fps`, `eta_seconds`, `model_loaded`, `strategy_used`, `fallbac
 | GET/PUT | `/settings` | LaMa/processing preferences |
 | GET | `/settings/lama-status` | Model load/download status |
 | POST | `/settings/lama-ensure` | Download/load checkpoint |
+
+---
+
+## Diagnostics (Phase 8)
+
+See [DIAGNOSTICS.md](./DIAGNOSTICS.md) for the full additive diagnostics API (`/diagnostics/*`).
+
+Job progress may include optional `error_reason` and `suggested_fix` when status is `failed` (older clients ignore unknown fields).

@@ -12,3 +12,10 @@ def configure_logging(debug: bool = False) -> None:
         stream=sys.stdout,
         force=True,
     )
+    # Attach ring buffer for Diagnostics → Log viewer (additive)
+    try:
+        from app.services.log_buffer import attach_log_handler
+
+        attach_log_handler()
+    except Exception:  # noqa: BLE001
+        pass

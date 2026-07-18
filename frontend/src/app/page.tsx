@@ -17,7 +17,7 @@ export default function Home() {
           Private AI Video Cleaner
         </p>
         <span className="rounded-md border border-border bg-surface px-2.5 py-1 font-[family-name:var(--font-mono)] text-[11px] uppercase tracking-[0.14em] text-muted">
-          Phase 6–7
+          Phase 8
         </span>
       </header>
 

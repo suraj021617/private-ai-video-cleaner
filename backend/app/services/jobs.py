@@ -89,6 +89,14 @@ class JobService:
     ) -> JobProgressOut:
         options = _options_dict(job)
         metrics = options.get("_progress") or {}
+        error_reason = None
+        suggested_fix = None
+        if job.status == "failed" and job.error_message:
+            from app.services.diagnostics import explain_error
+
+            help_ = explain_error(job.error_message)
+            error_reason = help_["reason"]
+            suggested_fix = help_["suggested_fix"]
         return JobProgressOut(
             id=job.id,
             status=job.status,
@@ -104,6 +112,8 @@ class JobService:
             strategy_used=job.strategy_used or metrics.get("strategy_used"),
             fallback_from=metrics.get("fallback_from"),
             queue_position=queue_position,
+            error_reason=error_reason,
+            suggested_fix=suggested_fix,
         )
 
     async def resolve_mask_payload(
