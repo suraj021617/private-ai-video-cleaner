@@ -1,4 +1,6 @@
-# Workers package
+# Workers
 
-Media processing workers (FFmpeg encode/clean, OpenCV, AI inpainting) are intentionally
-absent in Phase 2. They will be added when processing features are approved.
+Background processing is orchestrated by `app.services.jobs.run_job_worker`,
+which runs `VideoProcessingPipeline` in a worker thread.
+
+Strategy plugins live under `app.processing.strategies`.
