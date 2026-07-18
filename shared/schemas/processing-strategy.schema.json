@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://private-ai-video-cleaner.local/schemas/processing-strategy.json",
+  "title": "ProcessingStrategy",
+  "description": "Extensible cleaning strategies. AI path is reserved for Phase 9.",
+  "type": "string",
+  "enum": [
+    "blur",
+    "fill",
+    "classic_inpaint",
+    "ai_inpaint"
+  ]
+}
