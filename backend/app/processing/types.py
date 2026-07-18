@@ -20,6 +20,19 @@ class ProcessingStrategy(str, Enum):
     FILL = "fill"
     CLASSIC_INPAINT = "classic_inpaint"
     AI_INPAINT = "ai_inpaint"
+    PROPAINTER = "propainter"
+    STTN = "sttn"
+
+
+class ExportCodec(str, Enum):
+    H264 = "h264"
+    HEVC = "hevc"
+
+
+class ExportQuality(str, Enum):
+    FAST = "fast"
+    BALANCED = "balanced"
+    BEST = "best"
 
 
 @dataclass(frozen=True)
@@ -32,6 +45,13 @@ class VideoStreamInfo:
     has_audio: bool
     video_codec: str | None = None
     audio_codec: str | None = None
+    pixel_format: str | None = None
+    color_space: str | None = None
+    color_transfer: str | None = None
+    color_primaries: str | None = None
+    rotation: int | None = None
+    bit_rate: int | None = None
+    hdr: bool = False
 
 
 @dataclass
@@ -83,3 +103,15 @@ class PipelineProgress:
     fps: float | None = None
     eta_seconds: float | None = None
     model_loaded: bool | None = None
+    strategy_used: str | None = None
+    fallback_from: str | None = None
+
+
+@dataclass
+class ExportOptions:
+    container: str = "mp4"  # mp4 | mov | mkv
+    codec: str = "h264"  # h264 | hevc
+    quality: str = "balanced"  # fast | balanced | best
+    target_width: int | None = None
+    target_height: int | None = None
+    preserve_hdr: bool = True

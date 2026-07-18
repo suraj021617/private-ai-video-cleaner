@@ -13,7 +13,7 @@ from app.api.deps import AuthContext, require_auth
 from app.core.config import Settings, get_settings
 from app.core.errors import AppError
 from app.db.session import get_db
-from app.processing.device import device_capabilities
+from app.processing.device import benchmark_devices, device_capabilities, memory_status
 from app.processing.plugins.lama import get_model_manager
 from app.processing.strategies import list_strategies
 from app.schemas.job import (
@@ -60,6 +60,8 @@ async def processing_capabilities(
         selected=str(caps["selected"]),
         strategies=[StrategyInfo(**item) for item in list_strategies()],
         lama=manager.status,
+        gpu_benchmark=benchmark_devices(),
+        memory=memory_status(),
     )
 
 
@@ -78,7 +80,8 @@ async def create_job(
         video=video, owner_id=auth.user.id, request=payload
     )
     background_tasks.add_task(run_job_worker, job.id, settings)
-    return jobs.to_out(job)
+    position = await jobs.queue_position(job)
+    return jobs.to_out(job, queue_position=position)
 
 
 @router.get("/videos/{video_id}/jobs", response_model=list[JobOut])
@@ -90,7 +93,24 @@ async def list_jobs(
 ) -> list[JobOut]:
     await videos.get_owned(video_id, auth.user.id)
     rows = await jobs.list_for_video(video_id, auth.user.id)
-    return [jobs.to_out(row) for row in rows]
+    out: list[JobOut] = []
+    for row in rows:
+        position = await jobs.queue_position(row)
+        out.append(jobs.to_out(row, queue_position=position))
+    return out
+
+
+@router.get("/jobs", response_model=list[JobOut])
+async def list_all_jobs(
+    auth: AuthContext = Depends(require_auth),
+    jobs: JobService = Depends(get_job_service),
+) -> list[JobOut]:
+    rows = await jobs.list_all(auth.user.id)
+    out: list[JobOut] = []
+    for row in rows:
+        position = await jobs.queue_position(row)
+        out.append(jobs.to_out(row, queue_position=position))
+    return out
 
 
 @router.get("/jobs/{job_id}", response_model=JobOut)
@@ -100,7 +120,8 @@ async def get_job(
     jobs: JobService = Depends(get_job_service),
 ) -> JobOut:
     job = await jobs.get_owned(job_id, auth.user.id)
-    return jobs.to_out(job)
+    position = await jobs.queue_position(job)
+    return jobs.to_out(job, queue_position=position)
 
 
 @router.get("/jobs/{job_id}/progress", response_model=JobProgressOut)
@@ -110,7 +131,45 @@ async def job_progress(
     jobs: JobService = Depends(get_job_service),
 ) -> JobProgressOut:
     job = await jobs.get_owned(job_id, auth.user.id)
-    return jobs.to_progress(job)
+    position = await jobs.queue_position(job)
+    return jobs.to_progress(job, queue_position=position)
+
+
+@router.post("/jobs/{job_id}/pause", response_model=JobOut)
+async def pause_job(
+    job_id: str,
+    auth: AuthContext = Depends(require_auth),
+    jobs: JobService = Depends(get_job_service),
+) -> JobOut:
+    job = await jobs.get_owned(job_id, auth.user.id)
+    job = await jobs.pause(job)
+    return jobs.to_out(job)
+
+
+@router.post("/jobs/{job_id}/resume", response_model=JobOut)
+async def resume_job(
+    job_id: str,
+    background_tasks: BackgroundTasks,
+    auth: AuthContext = Depends(require_auth),
+    jobs: JobService = Depends(get_job_service),
+    settings: Settings = Depends(get_settings),
+) -> JobOut:
+    job = await jobs.get_owned(job_id, auth.user.id)
+    job = await jobs.resume(job)
+    if job.status == "queued":
+        background_tasks.add_task(run_job_worker, job.id, settings)
+    return jobs.to_out(job)
+
+
+@router.post("/jobs/{job_id}/cancel", response_model=JobOut)
+async def cancel_job(
+    job_id: str,
+    auth: AuthContext = Depends(require_auth),
+    jobs: JobService = Depends(get_job_service),
+) -> JobOut:
+    job = await jobs.get_owned(job_id, auth.user.id)
+    job = await jobs.cancel(job)
+    return jobs.to_out(job)
 
 
 @router.get("/jobs/{job_id}/download")
@@ -139,7 +198,11 @@ async def download_job_output(
     except json.JSONDecodeError:
         options = {}
     fmt = str(options.get("export_format", path.suffix.lstrip(".") or "mp4"))
-    media = "video/quicktime" if fmt == "mov" else "video/mp4"
+    media = {
+        "mov": "video/quicktime",
+        "mkv": "video/x-matroska",
+        "mp4": "video/mp4",
+    }.get(fmt, "application/octet-stream")
     return FileResponse(
         path,
         media_type=media,

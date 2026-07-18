@@ -44,12 +44,39 @@ def get_session_factory() -> async_sessionmaker[AsyncSession]:
     return _session_factory
 
 
+def _sqlite_add_missing_columns(sync_conn) -> None:  # noqa: ANN001
+    """Best-effort additive migrations for SQLite (keeps older DBs working)."""
+    from sqlalchemy import inspect, text
+
+    inspector = inspect(sync_conn)
+    tables = set(inspector.get_table_names())
+    if "processing_jobs" in tables:
+        existing = {col["name"] for col in inspector.get_columns("processing_jobs")}
+        alters = []
+        if "strategy_used" not in existing:
+            alters.append(
+                "ALTER TABLE processing_jobs ADD COLUMN strategy_used VARCHAR(64)"
+            )
+        if "cancel_requested" not in existing:
+            alters.append(
+                "ALTER TABLE processing_jobs ADD COLUMN cancel_requested BOOLEAN DEFAULT 0"
+            )
+        if "pause_requested" not in existing:
+            alters.append(
+                "ALTER TABLE processing_jobs ADD COLUMN pause_requested BOOLEAN DEFAULT 0"
+            )
+        for stmt in alters:
+            sync_conn.execute(text(stmt))
+
+
 async def init_db() -> None:
     from app import models  # noqa: F401
 
     engine = get_engine()
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        if engine.dialect.name == "sqlite":
+            await conn.run_sync(_sqlite_add_missing_columns)
 
 
 async def get_db() -> AsyncIterator[AsyncSession]:

@@ -1,4 +1,4 @@
-# API Contract — Phase 2
+# API Contract — Phase 6/7
 
 Base URL: `/api/v1`  
 Auth: HttpOnly session cookie `pavc_session` + CSRF header `X-CSRF-Token` for unsafe methods.  
@@ -208,37 +208,85 @@ Payload (normalized coordinates 0–1):
 
 ---
 
-## Processing jobs (Phase 4)
+## Processing jobs
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| GET | `/processing/capabilities` | Yes | Device + strategy availability |
+| GET | `/processing/capabilities` | Yes | Device, strategies, benchmark, memory |
 | POST | `/videos/{video_id}/jobs` | Yes | Start mask-scoped processing job |
 | GET | `/videos/{video_id}/jobs` | Yes | List jobs for a video |
+| GET | `/jobs` | Yes | List all owner jobs |
 | GET | `/jobs/{job_id}` | Yes | Job detail |
 | GET | `/jobs/{job_id}/progress` | Yes | Progress poll |
-| GET | `/jobs/{job_id}/download` | Yes | Download processed MP4 |
+| POST | `/jobs/{job_id}/pause` | Yes | Pause queued/running job |
+| POST | `/jobs/{job_id}/resume` | Yes | Resume paused job |
+| POST | `/jobs/{job_id}/cancel` | Yes | Cancel job |
+| GET | `/jobs/{job_id}/download` | Yes | Download processed export |
 
-`POST /videos/{id}/jobs` body:
+`POST /videos/{id}/jobs` body (backward compatible; new fields optional):
 
 ```json
 {
-  "strategy": "classic_inpaint",
+  "strategy": "ai_inpaint",
   "mask_id": "optional-uuid",
-  "payload": { "version": 1, "video_width": 1920, "video_height": 1080, "fps": 30, "items": [] },
+  "payload": {
+    "version": 1,
+    "video_width": 1920,
+    "video_height": 1080,
+    "fps": 30,
+    "items": [],
+    "feather": 12,
+    "expansion": 0,
+    "edge_refine": 2
+  },
   "prefer_gpu": true,
+  "export_format": "mp4",
+  "export_codec": "h264",
+  "export_quality": "balanced",
+  "export_width": null,
+  "export_height": null,
   "blur_ksize": 31,
   "fill_color_bgr": [0, 0, 0],
   "inpaint_radius": 3,
-  "inpaint_method": "telea"
+  "inpaint_method": "telea",
+  "padding": 64,
+  "blend_strength": 1.0,
+  "feather_radius": 12,
+  "mask_expansion": 0,
+  "edge_refine": 0
 }
 ```
 
-Strategies: `blur`, `fill`, `classic_inpaint`, `ai_inpaint` (LaMa).
+Strategies: `blur`, `fill`, `classic_inpaint`, `ai_inpaint`, `propainter`, `sttn`.
 
-Additional job fields: `export_format` (`mp4`|`mov`), `padding`, `blend_strength`, `feather_radius`.
+Export: `export_format` (`mp4`|`mov`|`mkv`), `export_codec` (`h264`|`hevc`), `export_quality` (`fast`|`balanced`|`best`).
 
-Progress extras: `fps`, `eta_seconds`, `model_loaded`.
+Progress extras: `fps`, `eta_seconds`, `model_loaded`, `strategy_used`, `fallback_from`, `queue_position`.
+
+---
+
+## Smart editing (Phase 6)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/videos/{video_id}/smart/detect` | Yes | Object proposals at a timestamp |
+| POST | `/videos/{video_id}/smart/track` | Yes | Track box → keyframes |
+| POST | `/videos/{video_id}/smart/refine` | Yes | Feather/expand/refine mask PNG |
+| POST | `/videos/{video_id}/smart/thumbnails` | Yes | Timeline JPEG data-URLs |
+
+---
+
+## Projects
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/projects` | Yes | List projects |
+| POST | `/projects` | Yes | Create project |
+| GET | `/projects/{id}` | Yes | Get project + payload |
+| PUT | `/projects/{id}` | Yes | Update name/payload |
+| DELETE | `/projects/{id}` | Yes | Delete project + sidecar |
+
+---
 
 ### Settings
 
@@ -247,10 +295,3 @@ Progress extras: `fps`, `eta_seconds`, `model_loaded`.
 | GET/PUT | `/settings` | LaMa/processing preferences |
 | GET | `/settings/lama-status` | Model load/download status |
 | POST | `/settings/lama-ensure` | Download/load checkpoint |
-
----
-
-## Out of scope (later phases)
-
-- AI inpainting / AI removal models
-- Logo / text overlay pass

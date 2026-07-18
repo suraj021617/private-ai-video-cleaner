@@ -1,41 +1,48 @@
-# Processing engine + LaMa AI (Phase 5)
+# Processing engine
 
-## Pipeline (unchanged shell)
+## Pipeline
 
 ```
-Upload → Mask Editor → Mask Saved → Processing Engine → Export
+decode frames → rasterize mask (keyframes + polish) → strategy plugin → encode → mux audio
 ```
 
-Only the `ai_inpaint` strategy is new/real. Classic strategies remain.
+Guarantees:
 
-## LaMa plugin
+- Source FPS preserved (`-r` on encode)
+- Resolution preserved unless explicit 4K/export size requested
+- Audio stream-copied (`-c:a copy`) when present
+- Color / HDR metadata copied best-effort
+- Pixels outside the mask are never modified
 
-Path: `backend/app/processing/plugins/lama/`  
-(Symlink: `backend/processing/plugins/lama`)
+## Strategies
 
-| File | Role |
-|------|------|
-| `download.py` | Resumable checkpoint download |
-| `model_manager.py` | Load JIT model, CUDA/CPU, OOM → CPU |
-| `utils.py` | Crop/pad, feather, color match, blend |
-| `predict.py` | Crop-only LaMa inference + hard outside copy |
+| Name | Plugin | Notes |
+|------|--------|-------|
+| `blur` | OpenCV Gaussian | Always available |
+| `fill` | Solid fill | Always available |
+| `classic_inpaint` | OpenCV Telea/NS | Always available |
+| `ai_inpaint` | LaMa | Torch; GPU→CPU; OOM retry |
+| `propainter` | Slot | Falls back → LaMa → classic |
+| `sttn` | Slot | Falls back → LaMa → classic |
 
-Checkpoint: `models/lama/big-lama.pt` (auto-download on first AI run).
+Fallback resolution: `resolve_strategy()` in `app/processing/strategies/__init__.py`.
 
-## Invariants
+## Mask payload
 
-1. Only the padded bbox around the mask is sent to LaMa (default pad 64px).
-2. Soft feather blending + color correction.
-3. Final hard copy: `result[mask==0] = original[mask==0]`.
-4. FPS / resolution / audio preserved via existing FFmpeg muxer.
-5. Export `mp4` or `mov`.
+v1 `items` remain supported. Optional Phase 6 fields:
 
-## Settings API
+- `keyframes` on rect items (interpolated per frame)
+- `masks[]` named groups
+- `feather`, `expansion`, `edge_refine`
 
-- `GET/PUT /api/v1/settings`
-- `GET /api/v1/settings/lama-status`
-- `POST /api/v1/settings/lama-ensure`
+## Export
 
-## Jobs
+Containers: `mp4`, `mov`, `mkv`  
+Codecs: `h264`, `hevc` (HEVC→H264 retry if encoder missing)  
+Quality: `fast` / `balanced` / `best` (CRF + preset)  
+Optional `export_width` / `export_height` (e.g. 3840×2160)
 
-`strategy: "ai_inpaint"` is accepted. Progress includes `fps`, `eta_seconds`, `model_loaded`.
+## Devices
+
+Detection order: CUDA → OpenCL → CPU.  
+Capabilities endpoint exposes benchmark micro-timings and memory snapshot.

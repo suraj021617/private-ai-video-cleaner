@@ -59,6 +59,7 @@ class Settings(BaseSettings):
     lama_feather_radius: int = 12
     lama_cpu_threads: int = 0  # 0 = torch default
     processing_temp_dir: Path | None = None
+    max_concurrent_jobs: int = 1
 
     @field_validator("cookie_samesite")
     @classmethod

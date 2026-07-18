@@ -2,9 +2,15 @@
 
 import { useEffect, useState } from "react";
 import {
+  cancelJob,
   createProcessingJob,
   getJobProgress,
   jobDownloadUrl,
+  pauseJob,
+  resumeJob,
+  type ExportCodec,
+  type ExportFormat,
+  type ExportQuality,
   type JobProgress,
   type ProcessingStrategyName,
 } from "@/lib/jobs";
@@ -27,11 +33,14 @@ type Caps = {
     download_bytes?: number;
     download_total?: number | null;
   };
+  strategies?: Array<{ name: string; available: boolean; fallback?: string[] }>;
 };
 
 const strategies: { id: ProcessingStrategyName; label: string }[] = [
-  { id: "ai_inpaint", label: "AI Inpaint (LaMa)" },
-  { id: "classic_inpaint", label: "Classic Inpaint" },
+  { id: "ai_inpaint", label: "LaMa" },
+  { id: "propainter", label: "ProPainter" },
+  { id: "sttn", label: "STTN" },
+  { id: "classic_inpaint", label: "Classic" },
   { id: "blur", label: "Blur" },
   { id: "fill", label: "Fill" },
 ];
@@ -39,7 +48,11 @@ const strategies: { id: ProcessingStrategyName; label: string }[] = [
 export function ProcessPanel({ videoId, payload, activeMaskId }: Props) {
   const [strategy, setStrategy] =
     useState<ProcessingStrategyName>("ai_inpaint");
-  const [exportFormat, setExportFormat] = useState<"mp4" | "mov">("mp4");
+  const [exportFormat, setExportFormat] = useState<ExportFormat>("mp4");
+  const [exportCodec, setExportCodec] = useState<ExportCodec>("h264");
+  const [exportQuality, setExportQuality] =
+    useState<ExportQuality>("balanced");
+  const [export4k, setExport4k] = useState(false);
   const [progress, setProgress] = useState<JobProgress | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -71,9 +84,16 @@ export function ProcessPanel({ videoId, payload, activeMaskId }: Props) {
         const next = await getJobProgress(jobId);
         if (cancelled) return;
         setProgress(next);
-        if (next.status === "completed" || next.status === "failed") {
+        if (
+          next.status === "completed" ||
+          next.status === "failed" ||
+          next.status === "cancelled"
+        ) {
           setBusy(false);
           return;
+        }
+        if (next.status === "paused") {
+          setBusy(false);
         }
         window.setTimeout(() => {
           void tick();
@@ -92,7 +112,7 @@ export function ProcessPanel({ videoId, payload, activeMaskId }: Props) {
   }, [jobId]);
 
   async function onProcess() {
-    if (payload.items.length === 0) {
+    if (payload.items.length === 0 && !(payload.masks || []).length) {
       setError("Draw a selection mask before processing.");
       return;
     }
@@ -106,6 +126,13 @@ export function ProcessPanel({ videoId, payload, activeMaskId }: Props) {
         payload,
         prefer_gpu: true,
         export_format: exportFormat,
+        export_codec: exportCodec,
+        export_quality: exportQuality,
+        export_width: export4k ? 3840 : null,
+        export_height: export4k ? 2160 : null,
+        feather_radius: payload.feather ?? 12,
+        mask_expansion: payload.expansion ?? 0,
+        edge_refine: payload.edge_refine ?? 0,
       });
       setJobId(job.id);
     } catch (err) {
@@ -131,25 +158,34 @@ export function ProcessPanel({ videoId, payload, activeMaskId }: Props) {
           Process video
         </h2>
         <p className="mt-1 text-sm text-muted">
-          Mask-scoped cleaning. AI Inpaint uses LaMa on the selected region only.
+          Advanced AI falls back automatically when a model is unavailable.
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {strategies.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => setStrategy(item.id)}
-            className={`h-11 rounded-xl px-2 text-xs font-semibold sm:text-sm ${
-              strategy === item.id
-                ? "bg-accent text-[#041614]"
-                : "border border-border"
-            }`}
-          >
-            {item.label}
-          </button>
-        ))}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        {strategies.map((item) => {
+          const meta = caps?.strategies?.find((s) => s.name === item.id);
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setStrategy(item.id)}
+              className={`h-11 rounded-xl px-2 text-xs font-semibold sm:text-sm ${
+                strategy === item.id
+                  ? "bg-accent text-[#041614]"
+                  : "border border-border"
+              }`}
+              title={
+                meta && !meta.available
+                  ? `Unavailable — fallback: ${(meta.fallback || []).join(", ") || "classic"}`
+                  : undefined
+              }
+            >
+              {item.label}
+              {meta && !meta.available ? " *" : ""}
+            </button>
+          );
+        })}
       </div>
 
       <div className="flex flex-wrap gap-2 text-xs text-muted">
@@ -169,31 +205,95 @@ export function ProcessPanel({ videoId, payload, activeMaskId }: Props) {
         </span>
       </div>
 
-      <div className="flex gap-2">
-        {(["mp4", "mov"] as const).map((fmt) => (
-          <button
-            key={fmt}
-            type="button"
-            onClick={() => setExportFormat(fmt)}
-            className={`h-10 flex-1 rounded-xl text-sm font-semibold uppercase ${
-              exportFormat === fmt
-                ? "bg-accent-soft text-accent"
-                : "border border-border"
-            }`}
+      <div className="grid gap-2 sm:grid-cols-3">
+        <label className="text-xs text-muted">
+          Container
+          <select
+            className="mt-1 h-10 w-full rounded-xl border border-border bg-background px-2 text-sm text-foreground"
+            value={exportFormat}
+            onChange={(e) => setExportFormat(e.target.value as ExportFormat)}
           >
-            {fmt}
-          </button>
-        ))}
+            <option value="mp4">MP4</option>
+            <option value="mov">MOV</option>
+            <option value="mkv">MKV</option>
+          </select>
+        </label>
+        <label className="text-xs text-muted">
+          Codec
+          <select
+            className="mt-1 h-10 w-full rounded-xl border border-border bg-background px-2 text-sm text-foreground"
+            value={exportCodec}
+            onChange={(e) => setExportCodec(e.target.value as ExportCodec)}
+          >
+            <option value="h264">H.264</option>
+            <option value="hevc">HEVC</option>
+          </select>
+        </label>
+        <label className="text-xs text-muted">
+          Quality
+          <select
+            className="mt-1 h-10 w-full rounded-xl border border-border bg-background px-2 text-sm text-foreground"
+            value={exportQuality}
+            onChange={(e) => setExportQuality(e.target.value as ExportQuality)}
+          >
+            <option value="fast">Fast</option>
+            <option value="balanced">Balanced</option>
+            <option value="best">Best</option>
+          </select>
+        </label>
       </div>
 
-      <button
-        type="button"
-        disabled={busy}
-        onClick={() => void onProcess()}
-        className="h-12 w-full rounded-xl bg-accent text-sm font-semibold text-[#041614] disabled:opacity-50"
-      >
-        {busy ? "Processing…" : "Start processing"}
-      </button>
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={export4k}
+          onChange={(e) => setExport4k(e.target.checked)}
+        />
+        Export at 4K (3840×2160)
+      </label>
+
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => void onProcess()}
+          className="h-12 min-w-[10rem] flex-1 rounded-xl bg-accent text-sm font-semibold text-[#041614] disabled:opacity-50"
+        >
+          {busy ? "Processing…" : "Start processing"}
+        </button>
+        {jobId && progress?.status === "running" ? (
+          <button
+            type="button"
+            className="h-12 rounded-xl border border-border px-4 text-sm"
+            onClick={() => void pauseJob(jobId)}
+          >
+            Pause
+          </button>
+        ) : null}
+        {jobId && progress?.status === "paused" ? (
+          <button
+            type="button"
+            className="h-12 rounded-xl border border-border px-4 text-sm"
+            onClick={() => {
+              setBusy(true);
+              void resumeJob(jobId);
+            }}
+          >
+            Resume
+          </button>
+        ) : null}
+        {jobId &&
+        progress &&
+        !["completed", "failed", "cancelled"].includes(progress.status) ? (
+          <button
+            type="button"
+            className="h-12 rounded-xl border border-border px-4 text-sm text-danger"
+            onClick={() => void cancelJob(jobId)}
+          >
+            Cancel
+          </button>
+        ) : null}
+      </div>
 
       {progress ? (
         <div>
@@ -201,7 +301,12 @@ export function ProcessPanel({ videoId, payload, activeMaskId }: Props) {
             <span>
               {progress.status}
               {progress.device_used ? ` · ${progress.device_used}` : ""}
-              {progress.model_loaded ? " · model ready" : ""}
+              {progress.strategy_used
+                ? ` · ${progress.strategy_used}`
+                : ""}
+              {progress.fallback_from
+                ? ` (from ${progress.fallback_from})`
+                : ""}
             </span>
             <span>
               {progress.frames_done}/{progress.frames_total || "?"} frames

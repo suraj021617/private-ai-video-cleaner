@@ -4,15 +4,25 @@ import { useMemo, useRef, type PointerEvent as ReactPointerEvent } from "react";
 import { formatTimecode } from "@/lib/editor/canvas";
 import type { SelectionItem } from "@/lib/editor/types";
 
+type Thumb = { time: number; data_url: string };
+
 type Props = {
   duration: number;
   currentTime: number;
   fps: number;
   items: SelectionItem[];
+  thumbnails?: Thumb[];
   onSeek: (time: number) => void;
 };
 
-export function Timeline({ duration, currentTime, fps, items, onSeek }: Props) {
+export function Timeline({
+  duration,
+  currentTime,
+  fps,
+  items,
+  thumbnails = [],
+  onSeek,
+}: Props) {
   const trackRef = useRef<HTMLDivElement>(null);
   const safeDuration = duration > 0 ? duration : 1;
   const progress = Math.min(1, Math.max(0, currentTime / safeDuration));
@@ -55,6 +65,26 @@ export function Timeline({ duration, currentTime, fps, items, onSeek }: Props) {
         <span>{formatTimecode(currentTime, fps)}</span>
         <span>{formatTimecode(safeDuration, fps)}</span>
       </div>
+      {thumbnails.length > 0 ? (
+        <div className="flex h-12 overflow-hidden rounded-xl border border-border">
+          {thumbnails.map((thumb) => (
+            <button
+              key={`${thumb.time}-${thumb.data_url.slice(-12)}`}
+              type="button"
+              className="h-full flex-1 overflow-hidden"
+              onClick={() => onSeek(thumb.time)}
+              title={formatTimecode(thumb.time, fps)}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={thumb.data_url}
+                alt=""
+                className="h-full w-full object-cover opacity-90 transition-opacity hover:opacity-100"
+              />
+            </button>
+          ))}
+        </div>
+      ) : null}
       <div
         ref={trackRef}
         className="relative h-14 touch-none overflow-hidden rounded-xl border border-border bg-surface-elevated"

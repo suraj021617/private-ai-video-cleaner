@@ -13,6 +13,14 @@ class PointIn(BaseModel):
     y: float = Field(ge=0, le=1)
 
 
+class KeyframeIn(BaseModel):
+    time: float = Field(ge=0)
+    x: float = Field(ge=0, le=1)
+    y: float = Field(ge=0, le=1)
+    w: float = Field(gt=0, le=1)
+    h: float = Field(gt=0, le=1)
+
+
 class RectItem(BaseModel):
     id: str = Field(min_length=1, max_length=64)
     type: Literal["rect"]
@@ -22,6 +30,10 @@ class RectItem(BaseModel):
     h: float = Field(gt=0, le=1)
     start_time: float = Field(ge=0)
     end_time: float = Field(ge=0)
+    # Phase 6 optional fields (backward compatible)
+    enabled: bool = True
+    label: str | None = Field(default=None, max_length=120)
+    keyframes: list[KeyframeIn] = Field(default_factory=list, max_length=5000)
 
     @field_validator("end_time")
     @classmethod
@@ -39,6 +51,8 @@ class BrushItem(BaseModel):
     size: float = Field(gt=0, le=0.5)
     start_time: float = Field(ge=0)
     end_time: float = Field(ge=0)
+    enabled: bool = True
+    label: str | None = Field(default=None, max_length=120)
 
     @field_validator("end_time")
     @classmethod
@@ -49,12 +63,32 @@ class BrushItem(BaseModel):
         return value
 
 
+class MaskGroup(BaseModel):
+    """Named editable mask layer (Phase 6 multi-mask)."""
+
+    id: str = Field(min_length=1, max_length=64)
+    name: str = Field(min_length=1, max_length=160)
+    enabled: bool = True
+    items: list[RectItem | BrushItem] = Field(default_factory=list, max_length=500)
+
+
 class SelectionPayload(BaseModel):
-    version: Literal[1] = 1
+    """
+    Selection document.
+
+    version=1 remains the default and is fully supported.
+    version=2 may include `masks` groups; `items` is still accepted.
+    """
+
+    version: Literal[1, 2] = 1
     video_width: int = Field(gt=0)
     video_height: int = Field(gt=0)
     fps: float | None = Field(default=None, gt=0)
     items: list[RectItem | BrushItem] = Field(default_factory=list, max_length=500)
+    masks: list[MaskGroup] = Field(default_factory=list, max_length=64)
+    feather: int = Field(default=0, ge=0, le=64)
+    expansion: int = Field(default=0, ge=0, le=64)
+    edge_refine: int = Field(default=0, ge=0, le=16)
 
 
 class MaskCreateRequest(BaseModel):

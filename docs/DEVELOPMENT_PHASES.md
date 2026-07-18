@@ -1,35 +1,27 @@
-# Development phases — Private AI Video Cleaner
+# Development phases
 
-**Only the current phase is implemented until you approve the next.**
+| Phase | Status | Summary |
+|-------|--------|---------|
+| 1 Scaffold | Done | Monorepo, health API, dark shell |
+| 2 Auth + upload | Done | Bootstrap, sessions, chunked upload, streaming |
+| 3 Editor | Done | Timeline, rect/brush masks, undo/redo |
+| 4 Processing engine | Done | Blur/fill/classic pipeline, jobs API |
+| 5 LaMa AI | Done | Real LaMa crop inpaint, settings, GPU/CPU |
+| 6 Smart editing | Done | Detect, track, keyframes, multi-mask polish, thumbs, B/A, undo persistence |
+| 7 Advanced AI + production | Done | ProPainter/STTN slots + fallback, export presets, job controls, projects, installer, docs |
 
----
+## Phase 6–7 acceptance
 
-## Phase 1 — Repository & project configuration ✅
-## Phase 2 — Auth, uploads, metadata & progress ✅
-## Phase 3 — Mobile-first video editor ✅
-## Phase 4 — Processing engine ✅
-
-## Phase 5 — Real AI video inpainting (LaMa) *(current)*
-
-**Goal:** Replace placeholder AI with production LaMa inpainting.
-
-**Deliverables:**
-- LaMa plugin (`download`, `model_manager`, `predict`, `utils`)
-- Crop-only inference + feather blend + color correction
-- GPU auto-detect with CPU / OOM fallback
-- Resumable model download to `models/lama/`
-- Process panel: Classic / Blur / Fill / AI Inpaint + GPU/CPU/model/ETA/FPS
-- Settings page for model path, GPU, threads, padding, blend, temp dir
-- Export MP4 / MOV
-- Unit + integration tests (existing Phase 4 tests still pass)
-
----
-
-## Phase 6 — Optional logo / text overlay
-## Phase 7 — Hardening & production
-
----
-
-## Approval gate
-
-Wait for explicit approval before the next phase.
+- [x] Automatic object detection + mask proposals
+- [x] Object tracking → keyframes
+- [x] Feather / expansion / edge refine
+- [x] Before/after + timeline thumbnails
+- [x] Undo history persistence (localStorage + project payload)
+- [x] Plugin architecture with Classic / Blur / Fill / LaMa / ProPainter / STTN
+- [x] Automatic strategy fallback
+- [x] MP4/MOV/MKV, H264/HEVC, quality presets, 4K option
+- [x] CUDA/OpenCL/CPU + benchmark + memory + OOM retry
+- [x] Job queue pause/resume/cancel + recovery
+- [x] Project save/restore
+- [x] Windows installer / portable scaffolding
+- [x] Tests + documentation

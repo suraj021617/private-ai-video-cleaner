@@ -56,6 +56,7 @@ def apply_runtime_overrides(settings: Settings) -> Settings:
         "lama_blend_strength": "lama_blend_strength",
         "lama_feather_radius": "lama_feather_radius",
         "processing_temp_dir": "processing_temp_dir",
+        "max_concurrent_jobs": "max_concurrent_jobs",
     }
     for key, field in mapping.items():
         if key in overrides and overrides[key] is not None:
@@ -66,6 +67,8 @@ def apply_runtime_overrides(settings: Settings) -> Settings:
 def get_app_settings(settings: Settings | None = None) -> AppSettingsOut:
     base = settings or get_settings()
     effective = apply_runtime_overrides(base)
+    overrides = load_runtime_overrides(base)
+    max_jobs = overrides.get("max_concurrent_jobs", getattr(effective, "max_concurrent_jobs", 1))
     return AppSettingsOut(
         lama_model_dir=str(effective.lama_model_dir),
         lama_prefer_gpu=bool(effective.lama_prefer_gpu),
@@ -75,4 +78,5 @@ def get_app_settings(settings: Settings | None = None) -> AppSettingsOut:
         lama_feather_radius=int(effective.lama_feather_radius),
         processing_temp_dir=str(effective.temp_dir),
         storage_root=str(effective.storage_root),
+        max_concurrent_jobs=int(max_jobs or 1),
     )

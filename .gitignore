@@ -58,7 +58,14 @@ models/lama/**
 
 # Phase backups
 *.phase5.bak
+*.phase6.bak
 backups/
+
+# Projects sidecars
+storage/projects/*
+
+# Desktop build output
+desktop/dist/
 
 # Logs & caches
 *.log

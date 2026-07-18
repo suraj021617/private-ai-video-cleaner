@@ -23,6 +23,7 @@ class StorageService:
             self.settings.uploads_dir,
             self.settings.processed_dir,
             self.settings.temp_dir,
+            self.settings.storage_root / "projects",
         ):
             path.mkdir(parents=True, exist_ok=True)
 

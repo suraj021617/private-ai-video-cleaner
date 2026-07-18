@@ -27,6 +27,20 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
     StorageService(settings).ensure_roots()
     await init_db()
+
+    # Persistent job recovery after crash/restart (skip under pytest)
+    if settings.app_env != "test":
+        try:
+            from app.services.jobs import recover_interrupted_jobs, run_job_worker
+
+            recovered = await recover_interrupted_jobs(settings)
+            for job_id in recovered:
+                import asyncio
+
+                asyncio.create_task(run_job_worker(job_id, settings))
+        except Exception:  # noqa: BLE001
+            pass
+
     yield
 
 
@@ -37,7 +51,8 @@ def create_app() -> FastAPI:
         version=__version__,
         description=(
             "Private API for editing videos you have permission to edit. "
-            "Phase 5: LaMa AI inpainting with mask-scoped FFmpeg/OpenCV pipeline."
+            "Phase 6/7: smart editing, advanced AI plugins, export presets, "
+            "job queue controls, and project persistence."
         ),
         lifespan=lifespan,
         docs_url="/docs",
@@ -62,7 +77,7 @@ def create_app() -> FastAPI:
             "version": __version__,
             "docs": "/docs",
             "health": f"{settings.api_v1_prefix}/health",
-            "phase": "5-lama-inpainting",
+            "phase": "6-7-production",
         }
 
     return application

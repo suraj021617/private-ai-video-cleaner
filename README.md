@@ -1,6 +1,6 @@
 # Private AI Video Cleaner
 
-Private, owner-only web application for editing videos you have permission to edit.
+Private, owner-only desktop/web application for editing videos you have permission to edit — local processing, maximum privacy.
 
 > **Intended use:** Only process media you own or have explicit rights to edit.
 
@@ -10,25 +10,33 @@ Private, owner-only web application for editing videos you have permission to ed
 |-------|------------|
 | Frontend | Next.js (TypeScript), Tailwind CSS |
 | Backend | FastAPI (Python), SQLAlchemy, Argon2 sessions |
-| Media metadata | ffprobe (FFmpeg suite) |
-| Future processing | OpenCV + FFmpeg encode (later phases) |
+| Media | FFmpeg / ffprobe, OpenCV |
+| AI | LaMa (real), ProPainter/STTN plugin slots |
 
 ## Current phase
 
-**Phase 5 — Real AI inpainting (LaMa)**
+**Phase 6–7 — Smart editing + advanced AI + production hardening**
 
-Mask-scoped LaMa object removal with GPU/CPU fallback, resumable model download, settings page, and MP4/MOV export. Classic blur/fill/inpaint strategies remain available.
+- Automatic object detection, tracking, keyframes, multi-mask polish (feather / expand / refine)
+- Timeline thumbnails, before/after preview, persisted undo, project autosave
+- Strategies: Classic, Blur, Fill, LaMa, ProPainter, STTN (automatic fallback)
+- Export: MP4 / MOV / MKV, H.264 / HEVC, Fast / Balanced / Best, optional 4K
+- Jobs: queue, pause, resume, cancel, crash recovery
+- GPU: CUDA → OpenCL → CPU, benchmarks, memory snapshot, OOM retry
+- Windows portable package + Inno Setup installer scaffolding
 
-See [docs/PROCESSING_ENGINE.md](docs/PROCESSING_ENGINE.md), [docs/DEVELOPMENT_PHASES.md](docs/DEVELOPMENT_PHASES.md), and [docs/API_CONTRACT.md](docs/API_CONTRACT.md).
+See [docs/](docs/) for architecture, API, installation, troubleshooting, and developer guides.
 
 ## Repository layout
 
 ```
 .
 ├── frontend/          # Next.js app
-├── backend/           # FastAPI API
+├── backend/           # FastAPI API + processing engine
+├── desktop/           # Windows portable + installer scripts
 ├── shared/            # Shared schema notes
-├── docs/              # Architecture & API contract
+├── docs/              # Architecture & guides
+├── models/            # Local AI checkpoints (gitignored content)
 ├── storage/           # Local media (gitignored content)
 └── scripts/           # Dev helpers
 ```
@@ -61,8 +69,6 @@ npm install
 npm run dev
 ```
 
-Frontend proxies `/api/*` to the backend (`BACKEND_URL`).
-
 - App: http://localhost:3000
 - API docs: http://localhost:8000/docs
 
@@ -70,7 +76,20 @@ Frontend proxies `/api/*` to the backend (`BACKEND_URL`).
 
 1. Open http://localhost:3000/bootstrap and create the owner account.
 2. Sign in at `/login`.
-3. Upload at `/upload`, then open `/editor/{videoId}` to select regions.
+3. Upload at `/upload`, then open `/editor/{videoId}`.
+4. Detect/track masks, choose a strategy, export.
+
+## Documentation
+
+| Doc | Description |
+|-----|-------------|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design |
+| [docs/API_CONTRACT.md](docs/API_CONTRACT.md) | HTTP API |
+| [docs/PROCESSING_ENGINE.md](docs/PROCESSING_ENGINE.md) | Pipeline & plugins |
+| [docs/INSTALLATION.md](docs/INSTALLATION.md) | Install & deploy |
+| [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Common issues |
+| [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) | Extending the app |
+| [desktop/README.md](desktop/README.md) | Windows packaging |
 
 ## Security notes
 
@@ -79,6 +98,7 @@ Frontend proxies `/api/*` to the backend (`BACKEND_URL`).
 - Auth rate limiting
 - Upload extension/MIME/size validation
 - Per-user storage isolation
+- Local-only AI inference (no cloud media upload)
 
 ## License
 

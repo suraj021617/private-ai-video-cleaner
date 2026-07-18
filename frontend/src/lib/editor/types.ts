@@ -5,6 +5,14 @@ export type Point = {
   y: number;
 };
 
+export type Keyframe = {
+  time: number;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+};
+
 export type RectItem = {
   id: string;
   type: "rect";
@@ -14,6 +22,9 @@ export type RectItem = {
   h: number;
   start_time: number;
   end_time: number;
+  enabled?: boolean;
+  label?: string | null;
+  keyframes?: Keyframe[];
 };
 
 export type BrushItem = {
@@ -23,16 +34,29 @@ export type BrushItem = {
   size: number;
   start_time: number;
   end_time: number;
+  enabled?: boolean;
+  label?: string | null;
 };
 
 export type SelectionItem = RectItem | BrushItem;
 
+export type MaskGroup = {
+  id: string;
+  name: string;
+  enabled: boolean;
+  items: SelectionItem[];
+};
+
 export type SelectionPayload = {
-  version: 1;
+  version: 1 | 2;
   video_width: number;
   video_height: number;
   fps: number | null;
   items: SelectionItem[];
+  masks?: MaskGroup[];
+  feather?: number;
+  expansion?: number;
+  edge_refine?: number;
 };
 
 export type EditorTool = "rect" | "brush" | "pan";
@@ -61,6 +85,10 @@ export function createEmptyPayload(
     video_height: height,
     fps,
     items: [],
+    masks: [],
+    feather: 0,
+    expansion: 0,
+    edge_refine: 0,
   };
 }
 
