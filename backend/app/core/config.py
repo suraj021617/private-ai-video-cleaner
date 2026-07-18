@@ -60,6 +60,8 @@ class Settings(BaseSettings):
     lama_cpu_threads: int = 0  # 0 = torch default
     processing_temp_dir: Path | None = None
     max_concurrent_jobs: int = 1
+    # Lite mode: no expectation of torch/LaMa; classic strategies preferred in UI
+    lite_mode: bool = False
 
     @field_validator("cookie_samesite")
     @classmethod

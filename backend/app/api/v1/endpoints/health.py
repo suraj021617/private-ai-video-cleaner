@@ -21,6 +21,7 @@ def health() -> HealthResponse:
         service=settings.app_name,
         version=__version__,
         phase="6-7-production",
+        lite_mode=bool(settings.lite_mode),
     )
 
 

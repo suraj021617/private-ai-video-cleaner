@@ -41,43 +41,24 @@ See [docs/](docs/) for architecture, API, installation, troubleshooting, and dev
 └── scripts/           # Dev helpers
 ```
 
-## Quick start
-
-### Prerequisites
-
-- Node.js 20+
-- Python 3.11+
-- FFmpeg / ffprobe on PATH
-
-### Backend
+## Quick start (any PC later)
 
 ```bash
-cd backend
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+./scripts/setup-and-run.sh --check   # verify ffmpeg / node / python
+./scripts/setup-and-run.sh --lite    # recommended first run (no torch)
+# or full AI:
+./scripts/setup-and-run.sh
 ```
 
-### Frontend
+Windows: `.\scripts\setup-and-run.ps1 -Lite`
 
-```bash
-cd frontend
-cp .env.example .env.local
-npm install
-npm run dev
-```
+- App: http://127.0.0.1:3000 → `/bootstrap` first
+- API docs: http://127.0.0.1:8000/docs
 
-- App: http://localhost:3000
-- API docs: http://localhost:8000/docs
+### Building from mobile (no laptop)
 
-### First run
-
-1. Open http://localhost:3000/bootstrap and create the owner account.
-2. Sign in at `/login`.
-3. Upload at `/upload`, then open `/editor/{videoId}`.
-4. Detect/track masks, choose a strategy, export.
+You can keep shipping code from your phone via Cursor Cloud + GitHub.
+See **[docs/FROM_MOBILE.md](docs/FROM_MOBILE.md)** — that is the “half work” path until you have a PC to run the offline app.
 
 ## Documentation
 

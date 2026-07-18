@@ -7,7 +7,32 @@
 - FFmpeg and ffprobe on `PATH`
 - Optional: NVIDIA CUDA drivers + PyTorch CUDA build for GPU LaMa
 
-## Development install
+## Fastest: one command
+
+```bash
+# Full (LaMa / torch)
+./scripts/setup-and-run.sh
+
+# Lite (no torch — Blur / Fill / Classic only)
+./scripts/setup-and-run.sh --lite
+
+# Tools check only
+./scripts/setup-and-run.sh --check
+```
+
+Windows PowerShell:
+
+```powershell
+.\scripts\setup-and-run.ps1
+.\scripts\setup-and-run.ps1 -Lite
+.\scripts\setup-and-run.ps1 -Check
+```
+
+Then open http://127.0.0.1:3000/bootstrap
+
+Building from a phone while you wait for a PC: [FROM_MOBILE.md](./FROM_MOBILE.md).
+
+## Manual development install
 
 ### Backend
 
@@ -15,8 +40,9 @@
 cd backend
 python3 -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+pip install -r requirements.txt          # or requirements-lite.txt
 cp .env.example .env
+# For lite: set LITE_MODE=true in .env
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 

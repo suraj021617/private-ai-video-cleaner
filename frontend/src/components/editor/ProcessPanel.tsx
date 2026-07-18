@@ -47,7 +47,7 @@ const strategies: { id: ProcessingStrategyName; label: string }[] = [
 
 export function ProcessPanel({ videoId, payload, activeMaskId }: Props) {
   const [strategy, setStrategy] =
-    useState<ProcessingStrategyName>("ai_inpaint");
+    useState<ProcessingStrategyName>("classic_inpaint");
   const [exportFormat, setExportFormat] = useState<ExportFormat>("mp4");
   const [exportCodec, setExportCodec] = useState<ExportCodec>("h264");
   const [exportQuality, setExportQuality] =
@@ -58,15 +58,27 @@ export function ProcessPanel({ videoId, payload, activeMaskId }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [caps, setCaps] = useState<Caps | null>(null);
+  const [liteMode, setLiteMode] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const data = await apiRequest<Caps>("/api/v1/processing/capabilities", {
-          method: "GET",
-        });
-        if (!cancelled) setCaps(data);
+        const [data, health] = await Promise.all([
+          apiRequest<Caps>("/api/v1/processing/capabilities", {
+            method: "GET",
+          }),
+          apiRequest<{ lite_mode?: boolean }>("/api/v1/health", {
+            method: "GET",
+          }),
+        ]);
+        if (cancelled) return;
+        setCaps(data);
+        const lite = Boolean(health.lite_mode);
+        setLiteMode(lite);
+        if (!lite) {
+          setStrategy("ai_inpaint");
+        }
       } catch {
         /* optional */
       }
@@ -158,12 +170,19 @@ export function ProcessPanel({ videoId, payload, activeMaskId }: Props) {
           Process video
         </h2>
         <p className="mt-1 text-sm text-muted">
-          Advanced AI falls back automatically when a model is unavailable.
+          {liteMode
+            ? "Lite mode: Classic / Blur / Fill (no AI model required)."
+            : "Advanced AI falls back automatically when a model is unavailable."}
         </p>
       </div>
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {strategies.map((item) => {
+        {(liteMode
+          ? strategies.filter((s) =>
+              ["classic_inpaint", "blur", "fill"].includes(s.id),
+            )
+          : strategies
+        ).map((item) => {
           const meta = caps?.strategies?.find((s) => s.name === item.id);
           return (
             <button

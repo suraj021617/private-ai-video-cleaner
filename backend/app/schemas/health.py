@@ -11,6 +11,7 @@ class HealthResponse(BaseModel):
         description="Current product build phase label",
         examples=["1-scaffold"],
     )
+    lite_mode: bool = False
 
 
 class ReadinessResponse(BaseModel):

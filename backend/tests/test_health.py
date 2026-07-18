@@ -11,6 +11,7 @@ async def test_health(app_client: AsyncClient) -> None:
     body = response.json()
     assert body["status"] == "ok"
     assert body["phase"] == "6-7-production"
+    assert "lite_mode" in body
 
 
 @pytest.mark.asyncio
