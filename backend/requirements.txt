@@ -1,0 +1,34 @@
+# Private AI Video Cleaner — backend dependencies (Phase 2)
+
+# API
+fastapi==0.115.12
+uvicorn[standard]==0.34.2
+python-multipart==0.0.20
+pydantic==2.11.4
+pydantic-settings==2.9.1
+email-validator==2.2.0
+
+# Database
+SQLAlchemy==2.0.40
+aiosqlite==0.21.0
+greenlet==3.2.1
+
+# Auth & security
+argon2-cffi==23.1.0
+itsdangerous==2.2.0
+
+# Media metadata (ffprobe wrapper uses stdlib subprocess; opencv kept for later phases)
+opencv-python-headless==4.11.0.86
+numpy==2.2.5
+Pillow==11.2.1
+
+# AI inpainting (LaMa TorchScript). Install CUDA wheels separately when deploying with GPU.
+torch==2.5.1
+torchvision==0.20.1
+
+# Dev / quality
+httpx==0.28.1
+pytest==8.3.5
+pytest-asyncio==0.26.0
+ruff==0.11.8
+aiofiles==24.1.0
