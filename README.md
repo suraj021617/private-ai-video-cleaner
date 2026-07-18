@@ -15,7 +15,10 @@ Private, owner-only web application for editing videos you have permission to ed
 
 ## Current phase
 
-**Phase 2 — Authentication, secure uploads, metadata, progress**
+**Phase 3 — Mobile-first video editor (selection tools)**
+
+CapCut/VN-style preview + rectangle/brush selection, timeline, undo/redo, save/load masks.  
+No AI removal and no FFmpeg processing yet.
 
 See [docs/DEVELOPMENT_PHASES.md](docs/DEVELOPMENT_PHASES.md) and [docs/API_CONTRACT.md](docs/API_CONTRACT.md).
 
@@ -68,7 +71,7 @@ Frontend proxies `/api/*` to the backend (`BACKEND_URL`).
 
 1. Open http://localhost:3000/bootstrap and create the owner account.
 2. Sign in at `/login`.
-3. Upload a video in `/library`.
+3. Upload at `/upload`, then open `/editor/{videoId}` to select regions.
 
 ## Security notes
 

@@ -165,8 +165,50 @@ Max size: configured via `MAX_UPLOAD_BYTES` (default 512 MiB).
 
 ---
 
+## Selection masks (Phase 3 editor)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/videos/{video_id}/masks` | Yes | List saved masks |
+| POST | `/videos/{video_id}/masks` | Yes | Save a new mask |
+| GET | `/videos/{video_id}/masks/{mask_id}` | Yes | Load mask payload |
+| PUT | `/videos/{video_id}/masks/{mask_id}` | Yes | Update name/payload |
+| DELETE | `/videos/{video_id}/masks/{mask_id}` | Yes | Delete mask |
+
+Payload (normalized coordinates 0–1):
+
+```json
+{
+  "version": 1,
+  "video_width": 1920,
+  "video_height": 1080,
+  "fps": 30,
+  "items": [
+    {
+      "id": "r1",
+      "type": "rect",
+      "x": 0.1,
+      "y": 0.1,
+      "w": 0.2,
+      "h": 0.15,
+      "start_time": 0,
+      "end_time": 12.5
+    },
+    {
+      "id": "b1",
+      "type": "brush",
+      "points": [{ "x": 0.5, "y": 0.5 }],
+      "size": 0.04,
+      "start_time": 0,
+      "end_time": 12.5
+    }
+  ]
+}
+```
+
+---
+
 ## Out of scope (later phases)
 
-- AI inpainting
+- AI inpainting / AI removal
 - FFmpeg encode / clean / overlay processing
-- Selection editor APIs

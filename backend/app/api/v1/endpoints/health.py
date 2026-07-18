@@ -20,7 +20,7 @@ def health() -> HealthResponse:
         status="ok",
         service=settings.app_name,
         version=__version__,
-        phase="2-auth-upload",
+        phase="3-video-editor",
     )
 
 

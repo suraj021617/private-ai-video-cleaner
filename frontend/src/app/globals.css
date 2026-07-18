@@ -75,3 +75,33 @@ body {
 .animate-pulse-glow {
   animation: pulse-glow 4.5s ease-in-out infinite;
 }
+
+/* Editor: iPhone-friendly scrolling + touch drawing */
+.editor-shell {
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.editor-shell button,
+.editor-shell a {
+  touch-action: manipulation;
+}
+
+.editor-shell input[type="range"] {
+  height: 2rem;
+}
+
+@keyframes stage-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.editor-shell main > :first-child {
+  animation: stage-in 0.45s ease-out both;
+}

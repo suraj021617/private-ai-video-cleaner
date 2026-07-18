@@ -1,9 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { VideoUploader } from "@/components/upload/VideoUploader";
 import {
   deleteVideo,
   listVideos,
@@ -77,21 +77,25 @@ export function LibraryClient() {
             Signed in as {user.display_name} ({user.email})
           </p>
         </div>
-        <button
-          type="button"
-          onClick={async () => {
-            await logout();
-            router.replace("/login");
-          }}
-          className="h-11 rounded-lg border border-border px-5 text-sm text-foreground transition hover:bg-surface"
-        >
-          Sign out
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/upload"
+            className="inline-flex h-11 items-center rounded-lg bg-accent px-5 text-sm font-semibold text-[#041614]"
+          >
+            Upload
+          </Link>
+          <button
+            type="button"
+            onClick={async () => {
+              await logout();
+              router.replace("/login");
+            }}
+            className="h-11 rounded-lg border border-border px-5 text-sm text-foreground transition hover:bg-surface"
+          >
+            Sign out
+          </button>
+        </div>
       </header>
-
-      <VideoUploader
-        onUploaded={(video) => setVideos((current) => [video, ...current])}
-      />
 
       <section>
         <h2 className="font-[family-name:var(--font-display)] text-xl font-bold">
@@ -129,18 +133,26 @@ export function LibraryClient() {
                         {video.metadata.video_codec ?? "unknown codec"}
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      className="h-10 w-fit rounded-lg border border-border px-4 text-sm text-danger transition hover:bg-surface-elevated"
-                      onClick={async () => {
-                        await deleteVideo(video.id);
-                        setVideos((current) =>
-                          current.filter((item) => item.id !== video.id),
-                        );
-                      }}
-                    >
-                      Delete
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                      <Link
+                        href={`/editor/${video.id}`}
+                        className="inline-flex h-10 items-center rounded-lg bg-accent px-4 text-sm font-semibold text-[#041614]"
+                      >
+                        Edit
+                      </Link>
+                      <button
+                        type="button"
+                        className="h-10 rounded-lg border border-border px-4 text-sm text-danger transition hover:bg-surface-elevated"
+                        onClick={async () => {
+                          await deleteVideo(video.id);
+                          setVideos((current) =>
+                            current.filter((item) => item.id !== video.id),
+                          );
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               </li>

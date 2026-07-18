@@ -41,10 +41,10 @@ export default function Home() {
             Sign in
           </Link>
           <Link
-            href="/bootstrap"
+            href="/upload"
             className="inline-flex h-12 items-center justify-center rounded-lg border border-border px-6 text-sm text-foreground transition hover:bg-surface"
           >
-            First-time setup
+            Upload & edit
           </Link>
         </div>
       </main>

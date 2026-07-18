@@ -58,3 +58,6 @@ class Video(Base):
         foreign_keys="Upload.video_id",
         uselist=False,
     )
+    masks: Mapped[list["SelectionMask"]] = relationship(  # noqa: F821
+        back_populates="video", cascade="all, delete-orphan"
+    )

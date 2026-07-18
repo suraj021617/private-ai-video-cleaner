@@ -46,6 +46,10 @@ export async function listVideos(): Promise<{ items: Video[]; total: number }> {
   return apiRequest("/api/v1/videos", { method: "GET" });
 }
 
+export async function getVideo(videoId: string): Promise<Video> {
+  return apiRequest(`/api/v1/videos/${videoId}`, { method: "GET" });
+}
+
 export async function deleteVideo(videoId: string): Promise<void> {
   await apiRequest<void>(`/api/v1/videos/${videoId}`, { method: "DELETE" });
 }
