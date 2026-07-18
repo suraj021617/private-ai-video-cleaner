@@ -271,7 +271,7 @@ async def run_job_worker(job_id: str, settings: Settings) -> None:
                     row.error_message = exc.message
                     row.message = "Failed"
                     await err_db.commit()
-        except Exception as exc:  # noqa: BLE001
+        except Exception:  # noqa: BLE001
             logger.exception("Job %s crashed", job_id)
             async with factory() as err_db:
                 row = await err_db.scalar(
@@ -282,6 +282,5 @@ async def run_job_worker(job_id: str, settings: Settings) -> None:
                     row.error_message = "Processing failed unexpectedly"
                     row.message = "Failed"
                     await err_db.commit()
-            raise
         finally:
             cleanup_work_dir(work_dir)
