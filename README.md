@@ -2,8 +2,6 @@
 
 Private, owner-only web application for editing videos you have permission to edit.
 
-Remove unwanted regions from video frames using manual selection tools, with architecture ready for future AI-assisted inpainting. Export clean MP4 files with optional logo/text overlays.
-
 > **Intended use:** Only process media you own or have explicit rights to edit.
 
 ## Stack
@@ -11,60 +9,35 @@ Remove unwanted regions from video frames using manual selection tools, with arc
 | Layer | Technology |
 |-------|------------|
 | Frontend | Next.js (TypeScript), Tailwind CSS |
-| Backend | FastAPI (Python) |
-| Media | FFmpeg, OpenCV |
-| Auth | Secure session-based auth (Phase 3) |
+| Backend | FastAPI (Python), SQLAlchemy, Argon2 sessions |
+| Media metadata | ffprobe (FFmpeg suite) |
+| Future processing | OpenCV + FFmpeg encode (later phases) |
+
+## Current phase
+
+**Phase 2 — Authentication, secure uploads, metadata, progress**
+
+See [docs/DEVELOPMENT_PHASES.md](docs/DEVELOPMENT_PHASES.md) and [docs/API_CONTRACT.md](docs/API_CONTRACT.md).
 
 ## Repository layout
 
 ```
 .
-├── frontend/          # Next.js app (UI, auth client, editor)
-├── backend/           # FastAPI API, media pipeline, jobs
-├── shared/            # Cross-cutting types / schemas (docs)
-├── docs/              # Architecture & phase plans
-├── storage/           # Local media scratch space (gitignored content)
-├── scripts/           # Dev & ops helpers
-└── .github/workflows/ # CI placeholders
+├── frontend/          # Next.js app
+├── backend/           # FastAPI API
+├── shared/            # Shared schema notes
+├── docs/              # Architecture & API contract
+├── storage/           # Local media (gitignored content)
+└── scripts/           # Dev helpers
 ```
 
-## Development phases
-
-See [docs/DEVELOPMENT_PHASES.md](docs/DEVELOPMENT_PHASES.md) for the full roadmap.
-
-| Phase | Focus |
-|-------|--------|
-| **1** | Repository init, folders, frontend & backend configuration |
-| **2** | Core API health, shared config, local run scripts |
-| **3** | Secure authentication |
-| **4** | Video upload & storage |
-| **5** | Video preview player |
-| **6** | Manual rectangle & brush selection |
-| **7** | Processing pipeline (FFmpeg/OpenCV) & MP4 export |
-| **8** | Optional logo/text overlay |
-| **9** | AI inpainting architecture hooks |
-| **10** | Hardening, CI, production deploy |
-
-**Current status: Phase 1**
-
-## Quick start (Phase 1)
+## Quick start
 
 ### Prerequisites
 
 - Node.js 20+
 - Python 3.11+
-- FFmpeg installed on PATH
-
-### Frontend
-
-```bash
-cd frontend
-cp .env.example .env.local
-npm install
-npm run dev
-```
-
-App: [http://localhost:3000](http://localhost:3000)
+- FFmpeg / ffprobe on PATH
 
 ### Backend
 
@@ -77,30 +50,33 @@ cp .env.example .env
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-API docs: [http://localhost:8000/docs](http://localhost:8000/docs)
-
-### From repo root
+### Frontend
 
 ```bash
-./scripts/dev-frontend.sh
-./scripts/dev-backend.sh
+cd frontend
+cp .env.example .env.local
+npm install
+npm run dev
 ```
 
-## Architecture overview
+Frontend proxies `/api/*` to the backend (`BACKEND_URL`).
 
-```
-Browser (Next.js)
-    │  HTTPS / session cookies
-    ▼
-FastAPI API
-    ├── Auth (sessions / JWT — Phase 3)
-    ├── Upload & asset store (Phase 4)
-    ├── Selection payloads (Phase 6)
-    ├── Job queue → FFmpeg / OpenCV workers (Phase 7+)
-    └── Export MP4 + optional overlays (Phase 7–8)
-```
+- App: http://localhost:3000
+- API docs: http://localhost:8000/docs
 
-Future AI inpainting plugs into the same job pipeline as a processing strategy (Phase 9).
+### First run
+
+1. Open http://localhost:3000/bootstrap and create the owner account.
+2. Sign in at `/login`.
+3. Upload a video in `/library`.
+
+## Security notes
+
+- HttpOnly session cookie + CSRF token on mutating requests
+- Argon2 password hashing
+- Auth rate limiting
+- Upload extension/MIME/size validation
+- Per-user storage isolation
 
 ## License
 

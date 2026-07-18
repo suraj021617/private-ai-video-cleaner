@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
     <div className="relative flex min-h-full flex-1 flex-col overflow-hidden">
@@ -15,7 +17,7 @@ export default function Home() {
           Private AI Video Cleaner
         </p>
         <span className="rounded-md border border-border bg-surface px-2.5 py-1 font-[family-name:var(--font-mono)] text-[11px] uppercase tracking-[0.14em] text-muted">
-          Phase 1
+          Phase 2
         </span>
       </header>
 
@@ -27,61 +29,24 @@ export default function Home() {
           Private AI Video Cleaner
         </h1>
         <p className="animate-fade-up-delay mt-5 max-w-xl text-base leading-relaxed text-muted sm:text-lg">
-          Edit videos you have permission to edit. Manual rectangle and brush
-          selection today — architecture ready for AI-assisted inpainting,
-          overlays, and clean MP4 export.
+          Sign in to upload videos you have permission to edit. Secure sessions,
+          validated uploads, metadata, and progress tracking are ready.
         </p>
 
         <div className="animate-fade-up-delay mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <a
-            href="#roadmap"
+          <Link
+            href="/login"
             className="inline-flex h-12 items-center justify-center rounded-lg bg-accent px-6 text-sm font-semibold text-[#041614] transition hover:brightness-110"
           >
-            View roadmap
-          </a>
-          <p className="text-sm text-muted sm:ml-2">
-            Auth, upload, and editor arrive in later phases.
-          </p>
-        </div>
-
-        <section
-          id="roadmap"
-          className="mt-16 border-t border-border pt-8"
-          aria-labelledby="roadmap-heading"
-        >
-          <h2
-            id="roadmap-heading"
-            className="font-[family-name:var(--font-display)] text-xl font-bold text-foreground"
+            Sign in
+          </Link>
+          <Link
+            href="/bootstrap"
+            className="inline-flex h-12 items-center justify-center rounded-lg border border-border px-6 text-sm text-foreground transition hover:bg-surface"
           >
-            Build phases
-          </h2>
-          <p className="mt-2 max-w-xl text-sm text-muted">
-            Phase 1 configures the repository and apps. Later phases unlock
-            features after approval.
-          </p>
-          <ol className="mt-6 space-y-3 font-[family-name:var(--font-mono)] text-sm text-muted">
-            <li className="flex gap-3">
-              <span className="text-accent">01</span>
-              <span className="text-foreground">Repository &amp; configuration</span>
-            </li>
-            <li className="flex gap-3">
-              <span className="text-accent/70">02</span>
-              <span>API contract &amp; local DX</span>
-            </li>
-            <li className="flex gap-3">
-              <span className="text-accent/70">03</span>
-              <span>Secure authentication</span>
-            </li>
-            <li className="flex gap-3">
-              <span className="text-accent/70">04–08</span>
-              <span>Upload, preview, selection, export, overlays</span>
-            </li>
-            <li className="flex gap-3">
-              <span className="text-accent/70">09–10</span>
-              <span>AI inpainting hooks &amp; production hardening</span>
-            </li>
-          </ol>
-        </section>
+            First-time setup
+          </Link>
+        </div>
       </main>
 
       <footer className="relative z-10 border-t border-border px-5 py-4 text-xs text-muted sm:px-8">

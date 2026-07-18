@@ -3,6 +3,7 @@
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -20,16 +21,40 @@ class Settings(BaseSettings):
     debug: bool = True
     api_v1_prefix: str = "/api/v1"
 
-    # CORS — frontend origin(s); tighten in production
     cors_origins: str = "http://localhost:3000"
 
-    # Local media roots (relative to repo root when running from backend/)
-    storage_root: Path = Path("../storage")
-    max_upload_bytes: int = 512 * 1024 * 1024  # 512 MB soft for Phase 4
+    database_url: str = "sqlite+aiosqlite:///./data/app.db"
 
-    # Auth placeholders (wired in Phase 3)
-    secret_key: str = "change-me-in-production-use-long-random-string"
-    access_token_expire_minutes: int = 60 * 24
+    storage_root: Path = Path("../storage")
+    max_upload_bytes: int = 512 * 1024 * 1024
+    upload_chunk_size: int = 5 * 1024 * 1024
+
+    secret_key: str = Field(
+        default="change-me-in-production-use-long-random-string",
+        min_length=32,
+    )
+    session_cookie_name: str = "pavc_session"
+    csrf_cookie_name: str = "pavc_csrf"
+    session_ttl_minutes: int = 60 * 24 * 7
+    cookie_secure: bool = False
+    cookie_samesite: str = "lax"
+
+    # Auth rate limiting (in-memory; per-process)
+    auth_rate_limit_attempts: int = 10
+    auth_rate_limit_window_seconds: int = 300
+
+    allowed_video_extensions: str = "mp4,mov,m4v,webm,mkv"
+    allowed_video_mime_types: str = (
+        "video/mp4,video/quicktime,video/webm,video/x-matroska,application/octet-stream"
+    )
+
+    @field_validator("cookie_samesite")
+    @classmethod
+    def validate_samesite(cls, value: str) -> str:
+        normalized = value.lower()
+        if normalized not in {"lax", "strict", "none"}:
+            raise ValueError("cookie_samesite must be lax, strict, or none")
+        return normalized
 
     @property
     def cors_origin_list(self) -> list[str]:
@@ -46,6 +71,22 @@ class Settings(BaseSettings):
     @property
     def temp_dir(self) -> Path:
         return self.storage_root / "temp"
+
+    @property
+    def extension_allowlist(self) -> set[str]:
+        return {
+            e.strip().lower().lstrip(".")
+            for e in self.allowed_video_extensions.split(",")
+            if e.strip()
+        }
+
+    @property
+    def mime_allowlist(self) -> set[str]:
+        return {
+            m.strip().lower()
+            for m in self.allowed_video_mime_types.split(",")
+            if m.strip()
+        }
 
 
 @lru_cache

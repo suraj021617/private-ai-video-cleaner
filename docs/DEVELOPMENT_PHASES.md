@@ -4,127 +4,65 @@ This document is the source of truth for how the product is built. **Only the cu
 
 ---
 
-## Phase 1 — Repository & project configuration *(current)*
+## Phase 1 — Repository & project configuration ✅
 
-**Goal:** GitHub-ready monorepo with configured Next.js and FastAPI apps, empty scalable folders, and documented roadmap.
+**Goal:** GitHub-ready monorepo with configured Next.js and FastAPI apps.
 
-**Deliverables:**
-- Root README, `.gitignore`, env examples
-- `frontend/` — Next.js + TypeScript + Tailwind (premium dark shell)
-- `backend/` — FastAPI app package layout, deps for future OpenCV/FFmpeg work
-- `docs/`, `shared/`, `storage/`, `scripts/`, CI workflow stub
-- Architecture notes for auth, media, and AI inpainting extension points
-
-**Out of scope:** Auth, uploads, editor tools, processing jobs.
+**Deliverables:** Root docs, frontend/backend scaffolds, storage folders, CI stub.
 
 ---
 
-## Phase 2 — Local developer experience & API contract
+## Phase 2 — Auth, uploads, metadata & progress *(current)*
 
-**Goal:** Reliable local run story and a thin, versioned API surface.
+**Goal:** Production-ready private authentication and secure video upload system.
 
 **Deliverables:**
-- Health/readiness endpoints with structured responses
-- Shared CORS + env validation
-- Optional Docker Compose for API + frontend
-- OpenAPI tags aligned with future domains (`auth`, `videos`, `jobs`, `exports`)
+- Complete API contract (`docs/API_CONTRACT.md`)
+- Owner bootstrap + login + logout + session cookies + CSRF
+- Password hashing (Argon2), rate limiting, structured errors
+- Chunked upload APIs with progress endpoint
+- Per-user storage layout
+- Video list/detail/metadata/content/delete
+- ffprobe metadata extraction (no encode/clean pipeline)
+- Frontend login, bootstrap, library + uploader
+
+**Out of scope:** AI inpainting, FFmpeg processing/export, selection editor.
 
 ---
 
-## Phase 3 — Secure authentication
+## Phase 3 — Video preview polish
 
-**Goal:** Private app access for the owner only.
-
-**Deliverables:**
-- Registration/login (or invite-only single-owner bootstrap)
-- HttpOnly secure cookies / session tokens
-- Protected API routes & Next.js middleware guards
-- Password hashing (argon2/bcrypt), rate limiting on auth endpoints
-- CSRF strategy for cookie-based sessions
+**Goal:** Rich mobile-first preview experience on top of authenticated content streaming.
 
 ---
 
-## Phase 4 — Video upload & storage
+## Phase 4 — Manual rectangle & brush selection
 
-**Goal:** Accept owner videos safely and persist them for editing.
-
-**Deliverables:**
-- Multipart upload with size/type validation (MP4, MOV, etc.)
-- Per-user storage isolation under `storage/uploads`
-- Metadata records (duration, resolution, codec via FFmpeg probe)
-- Signed/temporary access URLs for preview
+**Goal:** Owner marks regions to clean across frames/time.
 
 ---
 
-## Phase 5 — Video preview
+## Phase 5 — Processing pipeline & MP4 export
 
-**Goal:** Mobile-first dark UI player for reviewing source footage.
-
-**Deliverables:**
-- Responsive video preview component
-- Frame scrubbing / timestamp display
-- Loading and error states
-- Sync preview with selection timeline (prep for Phase 6)
+**Goal:** Apply cleaning via OpenCV/FFmpeg and export processed MP4.
 
 ---
 
-## Phase 6 — Manual rectangle & brush selection
-
-**Goal:** Let the owner mark regions to clean across frames/time.
-
-**Deliverables:**
-- Canvas overlay on the video preview
-- Rectangle tool (drag to select)
-- Brush/mask tool with adjustable size
-- Selection model: shapes + raster mask + time range
-- Persist selections to the API
-
----
-
-## Phase 7 — Processing pipeline & MP4 export
-
-**Goal:** Apply cleaning and export a processed MP4.
-
-**Deliverables:**
-- Async job system (status polling / websocket later)
-- OpenCV mask application + FFmpeg encode pipeline
-- Classic inpaint / blur / fill strategies as baseline
-- Downloadable export under `storage/processed`
-
----
-
-## Phase 8 — Optional logo / text overlay
+## Phase 6 — Optional logo / text overlay
 
 **Goal:** Brand the exported video after editing.
 
-**Deliverables:**
-- Overlay config (image or text, position, opacity, duration)
-- FFmpeg overlay filter integration
-- Preview of overlay before final export
+---
+
+## Phase 7 — AI-assisted inpainting architecture
+
+**Goal:** Plug in generative inpainting behind a processing strategy interface.
 
 ---
 
-## Phase 9 — AI-assisted inpainting architecture
+## Phase 8 — Hardening & production
 
-**Goal:** Plug in generative / AI inpainting without rewriting the pipeline.
-
-**Deliverables:**
-- `ProcessingStrategy` interface (classic vs AI)
-- Model worker stub (GPU optional)
-- Mask → model → frame compose contract
-- Feature flag to enable AI path per job
-
----
-
-## Phase 10 — Hardening & production
-
-**Goal:** Ship privately with confidence.
-
-**Deliverables:**
-- CI (lint, typecheck, unit tests)
-- Object storage adapter (S3-compatible) for media
-- Observability, backups, secrets management
-- Production Docker images & reverse proxy TLS
+**Goal:** CI depth, object storage adapter, observability, private deploy.
 
 ---
 

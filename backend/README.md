@@ -1,6 +1,6 @@
 # Backend — Private AI Video Cleaner
 
-FastAPI + FFmpeg + OpenCV (media libs installed; pipeline wired in later phases).
+FastAPI service for authentication, sessions, secure uploads, metadata, and progress.
 
 ## Setup
 
@@ -13,23 +13,30 @@ cp .env.example .env
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-- API root: http://localhost:8000
-- Health: http://localhost:8000/api/v1/health
-- Ready: http://localhost:8000/api/v1/ready
-- OpenAPI: http://localhost:8000/docs
+## Tests
+
+```bash
+pytest -q
+```
 
 ## Package layout
 
 ```
 app/
-  main.py              # FastAPI factory
-  core/                # settings, logging, security stubs
-  api/v1/endpoints/    # versioned HTTP routes
-  schemas/             # Pydantic models & enums
-  services/            # business logic placeholders
-  workers/             # ffmpeg / opencv / ai stubs
-  models/              # ORM models (later)
-  db/                  # database session (later)
+  main.py
+  core/          # settings, security, errors, rate limit
+  api/v1/        # auth, uploads, videos, health
+  models/        # SQLAlchemy models
+  schemas/       # Pydantic contracts
+  services/      # auth, upload, storage, probe, video
+  db/            # async engine/session
 ```
 
-Phase 1 exposes health/readiness only.
+## Storage layout
+
+```
+storage/
+  uploads/{user_id}/{video_id}/source.{ext}
+  temp/uploads/{upload_id}/...
+  processed/   # reserved for later export phases
+```

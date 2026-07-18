@@ -1,19 +1,22 @@
-from fastapi.testclient import TestClient
+"""System health tests."""
 
-from app.main import app
+from httpx import AsyncClient
+import pytest
 
-client = TestClient(app)
 
-
-def test_health() -> None:
-    response = client.get("/api/v1/health")
+@pytest.mark.asyncio
+async def test_health(app_client: AsyncClient) -> None:
+    response = await app_client.get("/api/v1/health")
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == "ok"
-    assert body["phase"] == "1-scaffold"
+    assert body["phase"] == "2-auth-upload"
 
 
-def test_root() -> None:
-    response = client.get("/")
+@pytest.mark.asyncio
+async def test_ready(app_client: AsyncClient) -> None:
+    response = await app_client.get("/api/v1/ready")
     assert response.status_code == 200
-    assert "health" in response.json()
+    body = response.json()
+    assert body["storage_writable"] is True
+    assert body["ffmpeg_available"] is True

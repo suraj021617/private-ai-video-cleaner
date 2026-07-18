@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, Manrope, Syne } from "next/font/google";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import "./globals.css";
 
 const display = Syne({
@@ -23,7 +24,7 @@ const mono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "Private AI Video Cleaner",
   description:
-    "Private video editing for media you have permission to edit. Manual selection tools with architecture ready for AI-assisted inpainting.",
+    "Private video editing for media you have permission to edit. Secure auth, upload, and metadata.",
   robots: {
     index: false,
     follow: false,
@@ -41,7 +42,7 @@ export default function RootLayout({
       className={`${display.variable} ${body.variable} ${mono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
