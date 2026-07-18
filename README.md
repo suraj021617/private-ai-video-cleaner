@@ -15,12 +15,11 @@ Private, owner-only web application for editing videos you have permission to ed
 
 ## Current phase
 
-**Phase 3 — Mobile-first video editor (selection tools)**
+**Phase 4 — Processing engine**
 
-CapCut/VN-style preview + rectangle/brush selection, timeline, undo/redo, save/load masks.  
-No AI removal and no FFmpeg processing yet.
+FFmpeg + OpenCV mask-scoped pipeline (blur / fill / classic inpaint), GPU when available, CPU fallback, jobs API + MP4 export. AI removal is not enabled yet.
 
-See [docs/DEVELOPMENT_PHASES.md](docs/DEVELOPMENT_PHASES.md) and [docs/API_CONTRACT.md](docs/API_CONTRACT.md).
+See [docs/PROCESSING_ENGINE.md](docs/PROCESSING_ENGINE.md), [docs/DEVELOPMENT_PHASES.md](docs/DEVELOPMENT_PHASES.md), and [docs/API_CONTRACT.md](docs/API_CONTRACT.md).
 
 ## Repository layout
 

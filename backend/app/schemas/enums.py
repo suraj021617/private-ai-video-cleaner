@@ -1,11 +1,9 @@
-"""Domain enums reserved for later phases."""
+"""Domain enums — kept in sync with processing package."""
 
 from enum import Enum
 
 
 class ProcessingStrategy(str, Enum):
-    """Cleaning strategies. `ai_inpaint` is reserved for Phase 9."""
-
     BLUR = "blur"
     FILL = "fill"
     CLASSIC_INPAINT = "classic_inpaint"

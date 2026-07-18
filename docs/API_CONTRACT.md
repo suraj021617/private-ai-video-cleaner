@@ -208,7 +208,37 @@ Payload (normalized coordinates 0–1):
 
 ---
 
+## Processing jobs (Phase 4)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/processing/capabilities` | Yes | Device + strategy availability |
+| POST | `/videos/{video_id}/jobs` | Yes | Start mask-scoped processing job |
+| GET | `/videos/{video_id}/jobs` | Yes | List jobs for a video |
+| GET | `/jobs/{job_id}` | Yes | Job detail |
+| GET | `/jobs/{job_id}/progress` | Yes | Progress poll |
+| GET | `/jobs/{job_id}/download` | Yes | Download processed MP4 |
+
+`POST /videos/{id}/jobs` body:
+
+```json
+{
+  "strategy": "classic_inpaint",
+  "mask_id": "optional-uuid",
+  "payload": { "version": 1, "video_width": 1920, "video_height": 1080, "fps": 30, "items": [] },
+  "prefer_gpu": true,
+  "blur_ksize": 31,
+  "fill_color_bgr": [0, 0, 0],
+  "inpaint_radius": 3,
+  "inpaint_method": "telea"
+}
+```
+
+Strategies: `blur`, `fill`, `classic_inpaint`. `ai_inpaint` is not accepted until implemented.
+
+---
+
 ## Out of scope (later phases)
 
-- AI inpainting / AI removal
-- FFmpeg encode / clean / overlay processing
+- AI inpainting / AI removal models
+- Logo / text overlay pass

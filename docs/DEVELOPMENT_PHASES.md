@@ -6,54 +6,33 @@ This document is the source of truth for how the product is built. **Only the cu
 
 ## Phase 1 — Repository & project configuration ✅
 
-GitHub-ready monorepo with Next.js + FastAPI scaffolds.
-
----
-
 ## Phase 2 — Auth, uploads, metadata & progress ✅
 
-Owner authentication, secure chunked uploads, metadata, progress APIs.
+## Phase 3 — Mobile-first video editor ✅
 
----
+## Phase 4 — Processing engine *(current)*
 
-## Phase 3 — Mobile-first video editor *(current)*
-
-**Goal:** CapCut/VN-style selection editor for marking regions — no AI removal, no FFmpeg processing.
+**Goal:** Production FFmpeg + OpenCV pipeline that processes only inside user masks.
 
 **Deliverables:**
-- Dedicated upload page
-- Video preview player with play/pause, seek, frame step, zoom
-- Timeline with playhead + selection markers
-- Rectangle + brush tools, undo/redo, clear, mask preview
-- Touch gestures (pinch zoom, large hit targets) for iPhone
-- Save / load selection masks via API
-- Premium dark responsive UI with smooth motion
+- Modular plugin pipeline (`blur`, `fill`, `classic_inpaint`)
+- Frame-by-frame decode/encode preserving fps, resolution, audio
+- GPU acceleration when available + CPU fallback
+- Jobs API with progress + MP4 download
+- Benchmark tests
+- Future AI plugin slot (`ai_inpaint` registered, unavailable)
 
-**Out of scope:** AI inpainting, FFmpeg clean/export pipeline.
+**Out of scope:** AI removal models, logo/text overlays.
 
----
-
-## Phase 4 — Processing pipeline & MP4 export
-
-Apply cleaning via OpenCV/FFmpeg and export processed MP4.
+See `docs/PROCESSING_ENGINE.md`.
 
 ---
 
 ## Phase 5 — Optional logo / text overlay
 
-Brand the exported video after editing.
-
----
-
-## Phase 6 — AI-assisted inpainting architecture
-
-Plug generative inpainting behind a processing strategy interface.
-
----
+## Phase 6 — AI-assisted inpainting
 
 ## Phase 7 — Hardening & production
-
-CI depth, object storage adapter, observability, private deploy.
 
 ---
 

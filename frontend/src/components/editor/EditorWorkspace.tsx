@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { EditorToolbar } from "@/components/editor/EditorToolbar";
 import { MaskPanel } from "@/components/editor/MaskPanel";
+import { ProcessPanel } from "@/components/editor/ProcessPanel";
 import { Timeline } from "@/components/editor/Timeline";
 import { TransportControls } from "@/components/editor/TransportControls";
 import { VideoStage } from "@/components/editor/VideoStage";
@@ -173,6 +174,12 @@ export function EditorWorkspace({ video }: Props) {
             setActiveMaskId(maskId || null);
             setMaskName(name);
           }}
+        />
+
+        <ProcessPanel
+          videoId={video.id}
+          payload={history.payload}
+          activeMaskId={activeMaskId}
         />
       </main>
     </div>

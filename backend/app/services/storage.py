@@ -14,6 +14,10 @@ class StorageService:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
 
+    @property
+    def processed_dir(self) -> Path:
+        return self.settings.processed_dir
+
     def ensure_roots(self) -> None:
         for path in (
             self.settings.uploads_dir,
